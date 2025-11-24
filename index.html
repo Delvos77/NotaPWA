@@ -59,23 +59,20 @@
             <input type="text" id="customer-name" placeholder="Nama Pelanggan (Cth: Toko ABC)"
                    class="w-full p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 mb-4 bg-gray-800 text-white placeholder-gray-400">
 
-            <form id="item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
-                
-                <input type="text" id="item-name" placeholder="Nama Barang (Ketik Manual)" required
+            <form id="item-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <input type="text" id="item-name" placeholder="Nama Barang (Cari/Ketik)" required list="master-items"
                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
+                <datalist id="master-items">
+                    </datalist> 
                 
-                <input type="text" id="item-type" placeholder="Jenis (Pilih/Ketik)" required list="master-types-datalist"
-                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                <datalist id="master-types-datalist"></datalist>
-                       
-                <input type="text" id="item-price" placeholder="Rp 0" readonly
+                <input type="text" id="item-price" placeholder="Harga Otomatis" readonly
                        class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-green-400 font-semibold cursor-default">
                        
-                <input type="number" id="item-qty" placeholder="1" required min="1" value="1"
+                <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
                 <button type="submit" 
-                        class="col-span-full p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98]">
+                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full">
                     Tambah ke Nota
                 </button>
             </form>
@@ -153,18 +150,20 @@
     <script type="module">
         // --- CORE APPLICATION LOGIC ---
 
-        // --- MASTER DATA BARU: HARGA BERDASARKAN JENIS BARANG ---
-        const masterTipeHarga = {
-            "ATK": 5000, 
-            "Kertas": 10000, 
-            "Elektronik": 25000, 
-            // Tambahkan jenis barang lain di sini jika diperlukan
-        };
-        
-        // --- FUNGSI MENCARI HARGA BERDASARKAN JENIS ---
-        function getPriceByType(type) {
-            // Mengambil harga dari masterTipeHarga. Jika jenis tidak ada, kembalikan 0.
-            return masterTipeHarga[type] || 0; 
+        // --- MASTER DATA: DAFTAR BARANG (SIMULASI DATABASE) ---
+        const masterBarang = [
+            { name: "Pulpen Standard", price: 3000, type: "ATK" }, 
+            { name: "Buku Tulis Sinar Dunia", price: 6500, type: "ATK" },
+            { name: "Albatros", price: 10000, type: "Kertas" }, 
+            { name: "Pensil 2B", price: 2500, type: "ATK" },
+            { name: "Penghapus Kenko", price: 1500, type: "ATK" },
+            { name: "Kertas HVS A4 80gr", price: 50000, type: "Kertas" }
+        ];
+
+        // --- FUNGSI BARU: MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
+        function getPriceByName(name) {
+            const item = masterBarang.find(barang => barang.name.toLowerCase() === name.toLowerCase());
+            return item || null; 
         }
 
         const STORAGE_KEY = 'offline_invoice_history';
@@ -194,20 +193,19 @@
         const aksiHeader = document.getElementById('aksi-header');
 
 
-        // Referensi DOM untuk Form Input
-        const itemNameInput = document.getElementById('item-name'); // Nama (Manual)
-        const itemTypeInput = document.getElementById('item-type'); // Jenis (Lookup)
-        const itemPriceInput = document.getElementById('item-price'); // Harga (Otomatis)
+        // Referensi DOM BARU untuk Datalist/Lookup
+        const itemNameInput = document.getElementById('item-name');
+        const itemPriceInput = document.getElementById('item-price');
         const itemQtyInput = document.getElementById('item-qty');
-        const masterTypesDatalist = document.getElementById('master-types-datalist');
+        const datalistElement = document.getElementById('master-items');
 
-        // Referensi DOM untuk Modal (Tetap)
+        // Referensi DOM untuk Modal
         const customModal = document.getElementById('custom-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalActions = document.getElementById('modal-actions');
 
-        // Fungsi untuk menampilkan modal kustom (Tetap)
+        // Fungsi untuk menampilkan modal kustom
         function showCustomModal(title, message, buttons) {
             modalTitle.textContent = title;
             modalMessage.textContent = message;
@@ -223,6 +221,7 @@
                         btn.action();
                     }
                 };
+                // Style dasar untuk tombol modal
                 if (!btn.class.includes('px-4')) {
                      buttonElement.className += " px-4 py-2 rounded-lg font-medium transition duration-150";
                 }
@@ -233,13 +232,13 @@
             customModal.classList.add('flex');
         }
 
-        // Fungsi untuk menyembunyikan modal kustom (Tetap)
+        // Fungsi untuk menyembunyikan modal kustom
         function hideCustomModal() {
             customModal.classList.remove('flex');
             customModal.classList.add('hidden');
         }
 
-        // Fungsi utilitas format (Tetap)
+        // Fungsi utilitas format
         function formatRupiah(number) {
             const num = Number(number) || 0;
             return new Intl.NumberFormat('id-ID', {
@@ -257,42 +256,48 @@
             });
         }
         
-        // FUNGSI PENTING: Mengisi datalist dengan KUNCI (Jenis Barang) dari masterTipeHarga
+        // Fungsi untuk mengisi datalist
         function populateDatalist() {
-            masterTypesDatalist.innerHTML = '';
-            // Ambil semua kunci (jenis barang) dari masterTipeHarga
-            Object.keys(masterTipeHarga).forEach(type => {
+            datalistElement.innerHTML = '';
+            masterBarang.forEach(barang => {
                 const option = document.createElement('option');
-                option.value = type;
-                masterTypesDatalist.appendChild(option);
+                option.value = barang.name;
+                datalistElement.appendChild(option);
             });
         }
         
-        // FUNGSI PENTING: Event listener untuk lookup harga otomatis berdasarkan JENIS
-        itemTypeInput.addEventListener('input', function() {
-            const selectedType = this.value.trim();
-            const basePrice = getPriceByType(selectedType);
+        // **********************************************
+        // ********** PERBAIKAN UTAMA ADA DI SINI **********
+        // **********************************************
+        itemNameInput.addEventListener('input', function() {
+            const selectedName = this.value.trim();
+            const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
 
-            if (basePrice > 0) {
-                // Mengisi harga otomatis jika Jenis ditemukan di master
-                itemPriceInput.value = formatRupiah(basePrice); 
+            if (itemData) {
+                // Jika ditemukan, SET HARGA SATUAN dengan format Rupiah
+                itemPriceInput.value = formatRupiah(itemData.price); 
+                // Catatan: Jika Anda ingin menyimpan harga mentah (angka) di hidden input
+                // atau data-attribute, Anda bisa melakukannya di sini.
             } else {
-                // Kosongkan harga jika Jenis tidak ada
+                // Jika tidak ditemukan atau input dikosongkan, HAPUS HARGA
                 itemPriceInput.value = ''; 
             }
         });
+        // **********************************************
+        // **********************************************
 
 
-        // Fungsi untuk memperbarui Customer Name (Tetap)
+        // Fungsi untuk memperbarui Customer Name
         customerNameInput.addEventListener('input', () => {
             customerName = customerNameInput.value.trim();
         });
 
 
-        // Fungsi untuk menghitung total keseluruhan (Grand Total) (Tetap)
+        // Fungsi untuk menghitung total keseluruhan (Grand Total)
         window.calculateTotal = function() {
             const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
             
+            // Grand Total sekarang berada di TFOOT
             grandTotalElement.textContent = formatRupiah(grandTotal); 
             
             const isDisabled = items.length === 0;
@@ -301,8 +306,9 @@
             printImageButton.disabled = isDisabled; 
         }
 
-        // Fungsi untuk merender ulang daftar item di tabel (Tetap)
+        // Fungsi untuk merender ulang daftar item di tabel
         function renderItems() {
+            // Hapus semua baris kecuali empty state
             Array.from(itemsContainer.children).forEach(child => {
                 if (child.id !== 'empty-state') {
                     child.remove();
@@ -310,10 +316,12 @@
             });
 
             if (items.length === 0) {
+                // Pastikan empty state ditampilkan jika tidak ada item
                 if (itemsContainer.children.length === 0 || itemsContainer.children[0].id !== 'empty-state') {
                     itemsContainer.appendChild(emptyState);
                 }
             } else {
+                // Hapus empty state jika ada item
                 if (emptyState.parentNode) {
                     emptyState.remove();
                 }
@@ -321,7 +329,9 @@
                 items.forEach((item, index) => {
                     const subtotal = item.price * item.qty;
                     const row = document.createElement('tr');
+                    // Style baris disesuaikan untuk dark mode
                     row.className = 'hover:bg-gray-700 transition duration-150';
+                    // KOREKSI: Struktur HTML di renderItems dibersihkan
                     row.innerHTML = `
                         <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-50">${index + 1}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.name}</td>
@@ -345,39 +355,38 @@
             calculateTotal(); 
         }
 
-        // FUNGSI PENTING: Event listener untuk form tambah item
+        // Event listener untuk form tambah item
         itemForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const name = itemNameInput.value.trim(); // Nama (Manual)
-            const type = itemTypeInput.value.trim(); // Jenis (Lookup)
+            const name = itemNameInput.value.trim();
             const qty = parseInt(itemQtyInput.value);
             
-            // Mengambil HARGA dari master berdasarkan JENIS
-            const price = getPriceByType(type); 
+            // Ambil data lengkap untuk mendapatkan Jenis Barang dan Harga
+            const itemData = getPriceByName(name);
 
-            // Cek Nama (tidak boleh kosong), Harga (ditemukan di master > 0), dan Jumlah
-            if (name !== '' && price > 0 && qty > 0) {
-                
+            // Logika pengecekan menggunakan hasil lookup (itemData)
+            if (itemData && qty > 0) {
+                const price = itemData.price; // Ambil harga dari master
+                const type = itemData.type; // Ambil jenis dari master
+
                 items.push({ 
                     name, 
                     price, 
                     qty,
-                    type // Jenis Barang (Type) diambil dari input Jenis
+                    type 
                 });
                 renderItems();
 
                 // Reset form
                 itemNameInput.value = '';
-                itemTypeInput.value = ''; 
-                itemPriceInput.value = ''; 
+                itemPriceInput.value = ''; // Kosongkan tampilan harga
                 itemQtyInput.value = '1';
-                
                 itemNameInput.focus();
             } else {
                  showCustomModal(
                     "Input Tidak Valid",
-                    "Pastikan Nama Barang diketik, Jenis Barang dipilih dari daftar atau diketik dengan benar, dan Jumlah lebih dari 0. (Harga harus terisi otomatis)",
+                    "Pastikan Nama Barang ada di daftar master dan Jumlah lebih dari 0. Harga harus terisi otomatis.",
                     [{
                         text: "Oke",
                         class: "bg-indigo-600 text-white hover:bg-indigo-700"
@@ -386,13 +395,14 @@
             }
         });
 
-        // Fungsi untuk menghapus item berdasarkan indeks (Tetap)
+        // Fungsi untuk menghapus item berdasarkan indeks
         window.removeItem = function(index) {
             showCustomModal(
                 "Konfirmasi Hapus",
                 `Yakin ingin menghapus item ke-${index + 1} (${items[index].name}) dari nota?`,
                 [
                     {
+                        // Warna tombol disesuaikan untuk dark mode
                         text: "Batal",
                         class: "border border-gray-600 text-gray-300 hover:bg-gray-700"
                     },
@@ -408,7 +418,7 @@
             );
         };
         
-        // Fungsi untuk menghapus semua item (Tetap)
+        // Fungsi untuk menghapus semua item
         window.clearAllItems = function() {
              if (items.length === 0) return;
              
@@ -417,6 +427,7 @@
                 "Semua item saat ini akan dihapus. Lanjutkan?",
                 [
                     {
+                        // Warna tombol disesuaikan untuk dark mode
                         text: "Batal",
                         class: "border border-gray-600 text-gray-300 hover:bg-gray-700"
                     },
@@ -428,12 +439,11 @@
                             customerNameInput.value = '';
                             customerName = '';
                             
-                            // Reset input item aktif
+                            // Reset input form
                             itemNameInput.value = '';
-                            itemTypeInput.value = '';
-                            itemPriceInput.value = '';
+                            itemPriceInput.value = ''; 
                             itemQtyInput.value = '1';
-                            
+
                             renderItems();
                         }
                     }
@@ -441,7 +451,7 @@
             );
         };
 
-        // --- FUNGSI LOCAL STORAGE (Tetap) ---
+        // --- LOCAL STORAGE FUNCTIONS ---
 
         // Fungsi untuk menyimpan nota saat ini ke localStorage
         window.saveInvoice = function() {
@@ -455,6 +465,7 @@
 
             showCustomModal("Konfirmasi Simpan", "Anda yakin ingin menyimpan nota ini ke riwayat lokal?", [
                 {
+                    // Warna tombol disesuaikan untuk dark mode
                     text: "Batal",
                     class: "border border-gray-600 text-gray-300 hover:bg-gray-700"
                 },
@@ -466,9 +477,9 @@
                             const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
                             
                             const invoiceData = {
-                                id: Date.now().toString(), 
-                                customerName: customerNameInput.value.trim() || 'Pelanggan Umum', 
-                                items: JSON.parse(JSON.stringify(items)), 
+                                id: Date.now().toString(), // ID unik
+                                customerName: customerNameInput.value.trim() || 'Pelanggan Umum', // Simpan nama pelanggan
+                                items: JSON.parse(JSON.stringify(items)), // Deep copy
                                 grandTotal: grandTotal,
                                 timestamp: new Date().toISOString(),
                             };
@@ -476,19 +487,18 @@
                             const storedInvoicesJson = localStorage.getItem(STORAGE_KEY);
                             let invoices = storedInvoicesJson ? JSON.parse(storedInvoicesJson) : [];
                             
-                            invoices.unshift(invoiceData); 
+                            invoices.unshift(invoiceData); // Tambahkan di paling atas
 
                             localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
                             
-                            // Reset state setelah simpan
+                            // Setelah berhasil disimpan, bersihkan nota aktif dan muat ulang riwayat
                             items = [];
                             customerNameInput.value = '';
                             customerName = '';
                             itemNameInput.value = '';
-                            itemTypeInput.value = '';
                             itemPriceInput.value = '';
                             itemQtyInput.value = '1';
-
+                            
                             renderItems();
                             loadHistory();
 
@@ -508,18 +518,19 @@
             ]);
         };
 
-        // Fungsi untuk menampilkan detail item dari riwayat (Tetap)
+        // Fungsi untuk menampilkan detail item dari riwayat
         function renderHistoryDetail(invoice) {
+            // Teks disesuaikan untuk dark mode
             let detailHtml = `<p class="font-bold text-gray-300">Pelanggan: ${invoice.customerName || 'Tidak Tercatat'}</p>`;
-            detailHtml += `<ul class="list-disc list-inside space-y-1 text-sm text-gray-400 mt-2 hidden">`; 
+            detailHtml += `<ul class="list-disc list-inside space-y-1 text-sm text-gray-400 mt-2 hidden">`; // Mulai tersembunyi
             invoice.items.forEach(item => {
-                detailHtml += `<li>${item.name} (${item.type || 'N/A'}) - ${item.qty} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.qty)}</li>`; 
+                detailHtml += `<li>${item.name} (${item.type || 'N/A'}) - ${item.qty} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.qty)}</li>`; // Tambahkan Jenis Barang
             });
             detailHtml += `</ul>`;
             return detailHtml;
         }
 
-        // Fungsi untuk memuat riwayat transaksi dari localStorage (Tetap)
+        // Fungsi untuk memuat riwayat transaksi dari localStorage
         function loadHistory() {
             invoicesList.innerHTML = '';
             
@@ -535,8 +546,9 @@
                 const invoiceDate = formatTimestamp(invoice.timestamp);
                 
                 const card = document.createElement('div');
+                // Kartu riwayat disesuaikan untuk dark mode
                 card.className = 'p-4 border border-gray-700 rounded-lg shadow-sm bg-gray-800 hover:shadow-lg transition duration-150';
-                card.id = `invoice-card-${invoice.id}`; 
+                card.id = `invoice-card-${invoice.id}`; // Tambahkan ID untuk referensi
                 card.innerHTML = `
                     <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2">
                         <span class="text-sm text-gray-400">${invoiceDate}</span>
@@ -555,13 +567,14 @@
             });
         }
         
-        // Fungsi untuk me-load ulang nota dari riwayat ke nota aktif (Tetap)
+        // Fungsi untuk me-load ulang nota dari riwayat ke nota aktif
         window.loadInvoiceFromHistory = function(invoice) {
              showCustomModal(
                 "Muat Nota",
                 "Ini akan menimpa nota Anda saat ini. Lanjutkan?",
                 [
                     {
+                        // Warna tombol disesuaikan untuk dark mode
                         text: "Batal",
                         class: "border border-gray-600 text-gray-300 hover:bg-gray-700"
                     },
@@ -569,16 +582,12 @@
                         text: "Ya, Muat",
                         class: "bg-yellow-600 text-white hover:bg-yellow-700",
                         action: () => {
+                            // Muat data pelanggan dan item
                             customerNameInput.value = invoice.customerName || '';
                             customerName = invoice.customerName || '';
                             items = JSON.parse(JSON.stringify(invoice.items)); 
-                            
-                            itemNameInput.value = '';
-                            itemTypeInput.value = '';
-                            itemPriceInput.value = '';
-                            itemQtyInput.value = '1';
-
                             renderItems();
+                            // Sembunyikan riwayat agar fokus ke nota aktif
                             historyContent.classList.add('hidden'); 
                             historyToggleIcon.textContent = '►';
                             showCustomModal("Nota Dimuat", `Nota untuk ${invoice.customerName || 'Pelanggan Umum'} dari ${formatTimestamp(invoice.timestamp)} telah dimuat.`, [{
@@ -591,7 +600,7 @@
             );
         }
 
-        // Fungsi toggle detail riwayat (Tetap)
+        // Fungsi toggle detail riwayat
         window.toggleDetail = function(buttonElement) {
             const card = buttonElement.closest('.p-4');
             const itemDetails = card.querySelector('ul');
@@ -605,7 +614,7 @@
             }
         }
         
-        // --- FUNGSI GENERATE PNG (Tetap) ---
+        // --- PNG GENERATION FUNCTION ---
         window.generatePNG = function() {
             if (items.length === 0) {
                  showCustomModal("Gagal Mencetak", "Nota kosong, tidak ada yang bisa dicetak.", [{
@@ -615,32 +624,42 @@
                 return;
             }
 
+            // 1. Dapatkan elemen container utama
             const input = document.getElementById('app-container');
+
+            // 2. Siapkan informasi untuk ditampilkan di PNG
             const currentCustomer = customerNameInput.value.trim() || 'Pelanggan Umum';
             const fileName = `Nota-${currentCustomer.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.png`;
 
             printCustomerName.textContent = currentCustomer;
             printDate.textContent = new Date().toLocaleString('id-ID');
 
+            // 3. Sembunyikan elemen-elemen non-printable dan tampilkan info cetak
             const elementsToHide = [inputArea, actionsArea, historyArea];
             const aksiCells = itemsContainer.querySelectorAll('.aksi-cell');
 
+            // Tambahkan class untuk menyembunyikan semua elemen non-printable
             elementsToHide.forEach(el => el.classList.add('print-hide'));
             aksiCells.forEach(el => el.classList.add('print-hide'));
             aksiHeader.classList.add('print-hide');
             
             printInfoDisplay.classList.remove('hidden');
 
+
+            // 4. Generate Canvas dari HTML menggunakan html2canvas
             const dpr = window.devicePixelRatio || 1;
             const finalScale = Math.max(2, dpr); 
             
+            // Set background color for the canvas to dark mode background color
             html2canvas(input, { scale: finalScale, logging: false, useCORS: true, backgroundColor: '#1f2937' }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 
+                // Buat elemen <a> sementara untuk memicu unduhan
                 const link = document.createElement('a');
                 link.href = imgData;
                 link.download = fileName;
                 
+                // Simulasikan klik
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -652,6 +671,7 @@
                     class: "bg-red-600 text-white hover:bg-red-700"
                 }]);
             }).finally(() => {
+                // 5. Kembalikan tampilan normal setelah PNG selesai dibuat
                 elementsToHide.forEach(el => el.classList.remove('print-hide'));
                 aksiCells.forEach(el => el.classList.remove('print-hide'));
                 aksiHeader.classList.remove('print-hide');
@@ -661,7 +681,7 @@
         };
 
 
-        // Toggle History Content (Tetap)
+        // Toggle History Content
         historyHeader.addEventListener('click', () => {
             const isHidden = historyContent.classList.contains('hidden');
             if (isHidden) {
@@ -673,10 +693,11 @@
             }
         });
         
-        // --- PWA SERVICE WORKER REGISTRATION (Tetap) ---
+        // --- PWA SERVICE WORKER REGISTRATION ---
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
+                    // Coba daftarkan service worker
                     navigator.serviceWorker.register('./service-worker.js')
                         .then(registration => {
                             console.log('PWA ServiceWorker berhasil didaftarkan:', registration.scope);
@@ -693,7 +714,7 @@
         // Inisialisasi tampilan saat aplikasi dimuat
         document.addEventListener('DOMContentLoaded', () => {
             renderItems(); // Render item kosong saat pertama kali dimuat
-            populateDatalist(); // Mengisi Datalist untuk Jenis Barang
+            populateDatalist(); // BARU: Isi Datalist
             loadHistory(); // Muat riwayat dari localStorage
             registerServiceWorker(); // PWA: Daftarkan Service Worker
         });

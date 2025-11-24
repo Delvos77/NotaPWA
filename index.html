@@ -59,7 +59,7 @@
             <input type="text" id="customer-name" placeholder="Nama Pelanggan (Cth: Toko ABC)"
                    class="w-full p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 mb-4 bg-gray-800 text-white placeholder-gray-400">
 
-            <form id="item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+            <form id="item-form" class="grid grid-cols-1 md:grid-cols-6 gap-4 mt-4">
                 <input type="text" id="item-name-manual" placeholder="Nama Barang (Ketik Manual)" required 
                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
@@ -74,8 +74,13 @@
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
                 <button type="submit" 
-                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full md:col-span-1">
-                    Tambah ke Nota
+                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full **md:col-span-1**">
+                        Tambah ke Nota
+                </button>
+                
+                <button type="button" onclick="clearInputFields()" id="clear-input-button"
+                        class="p-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full md:col-span-1">
+                        Bersihkan Input
                 </button>
             </form>
         </div>
@@ -341,7 +346,14 @@
             saveButton.disabled = isDisabled;
             printImageButton.disabled = isDisabled; 
         }
-
+        // FUNGSI BARU: Membersihkan semua input barang
+        window.clearInputFields = function() {
+            itemNameInput.value = '';
+            itemTypeInput.value = ''; 
+            itemPriceManual.value = ''; 
+            itemQtyInput.value = '1';
+            itemNameInput.focus();
+};
         // Fungsi untuk merender ulang daftar item di tabel
         function renderItems() {
             // Hapus semua baris kecuali empty state
@@ -750,4 +762,5 @@
 
 </body>
 </html>
+
 

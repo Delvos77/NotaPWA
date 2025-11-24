@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nota-app-v2';
+const CACHE_NAME = 'nota-app-v1';
 
 // Daftar semua file yang perlu di-cache agar aplikasi berjalan offline.
 // Pastikan semua file lokal yang diakses oleh index.html tercantum di sini.
@@ -67,4 +67,5 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     // Mencari di cache terlebih dahulu
     caches.match(event.request
+
 

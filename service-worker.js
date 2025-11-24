@@ -1,5 +1,5 @@
 // Nama cache untuk versi saat ini
-const CACHE_NAME = 'nota-app-cache-v1'; 
+const CACHE_NAME = 'nota-app-cache-v2'; 
 
 // Daftar aset yang perlu dicache 
 const urlsToCache = [
@@ -84,4 +84,5 @@ self.addEventListener('fetch', (event) => {
       })
     );
   }
+
 });

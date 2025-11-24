@@ -65,8 +65,11 @@
                 <datalist id="master-items">
                     </datalist> 
                 
-                <input type="text" id="item-price" placeholder="Harga Otomatis" readonly
-                       class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-green-400 font-semibold cursor-default">
+                <input type="text" id="item-type" placeholder="Jenis (Cth: ATK)" required
+                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
+
+                <input type="number" id="item-price" placeholder="Harga Satuan (Angka)" required min="0"
+                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-green-400 font-semibold">
                        
                 <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
@@ -76,7 +79,7 @@
                     Tambah ke Nota
                 </button>
             </form>
-        </div>
+            </div>
 
         <div class="overflow-x-auto shadow-md rounded-lg mb-4">
             <table class="min-w-full divide-y divide-gray-700">
@@ -175,6 +178,7 @@
         const customerNameInput = document.getElementById('customer-name');
         const itemForm = document.getElementById('item-form');
         const itemsContainer = document.getElementById('invoice-items');
+        // Grand Total sekarang berada di TFOOT
         const grandTotalElement = document.getElementById('grand-total'); 
         const emptyState = document.getElementById('empty-state');
         const saveButton = document.getElementById('save-button');
@@ -196,7 +200,8 @@
         // Referensi DOM BARU untuk Datalist/Lookup
         const itemNameInput = document.getElementById('item-name');
         const itemPriceInput = document.getElementById('item-price');
-        const itemQtyInput = document.getElementById('item-qty');
+        const itemQtyInput = document.getElementById('item-qty'); // BARU
+        const itemTypeInput = document.getElementById('item-type'); // BARU
         const datalistElement = document.getElementById('master-items');
 
         // Referensi DOM untuk Modal
@@ -266,25 +271,26 @@
             });
         }
         
-        // **********************************************
-        // ********** PERBAIKAN UTAMA ADA DI SINI **********
-        // **********************************************
+        // ************************************************************
+        // ********** MODIFIKASI UNTUK PENGISIAN OTOMATIS (TIDAK DIKUNCI) **********
+        // ************************************************************
         itemNameInput.addEventListener('input', function() {
             const selectedName = this.value.trim();
-            const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
+            const itemData = getPriceByName(selectedName); 
 
             if (itemData) {
-                // Jika ditemukan, SET HARGA SATUAN dengan format Rupiah
-                itemPriceInput.value = formatRupiah(itemData.price); 
-                // Catatan: Jika Anda ingin menyimpan harga mentah (angka) di hidden input
-                // atau data-attribute, Anda bisa melakukannya di sini.
+                // Otomatis mengisi Harga dan Jenis, TETAPI TIDAK READONLY.
+                // Mengisi harga tanpa format Rupiah karena inputnya type="number"
+                itemPriceInput.value = itemData.price; 
+                itemTypeInput.value = itemData.type; 
             } else {
-                // Jika tidak ditemukan atau input dikosongkan, HAPUS HARGA
-                itemPriceInput.value = ''; 
+                // Jika Nama Barang tidak ada, biarkan user mengisi manual. 
+                // Kita hanya mengosongkan Jenis, tapi membiarkan Harga (nilai lama/manual) tetap ada.
+                itemTypeInput.value = ''; 
             }
         });
-        // **********************************************
-        // **********************************************
+        // ************************************************************
+        // ************************************************************
 
 
         // Fungsi untuk memperbarui Customer Name
@@ -359,16 +365,14 @@
         itemForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Ambil nilai LANGSUNG dari input form
             const name = itemNameInput.value.trim();
             const qty = parseInt(itemQtyInput.value);
-            
-            // Ambil data lengkap untuk mendapatkan Jenis Barang dan Harga
-            const itemData = getPriceByName(name);
+            const type = itemTypeInput.value.trim() || 'Lain-lain'; // Ambil jenis dari input, default 'Lain-lain'
+            const price = parseInt(itemPriceInput.value); // Ambil harga dari input (sudah number)
 
-            // Logika pengecekan menggunakan hasil lookup (itemData)
-            if (itemData && qty > 0) {
-                const price = itemData.price; // Ambil harga dari master
-                const type = itemData.type; // Ambil jenis dari master
+            // Pengecekan: Nama, Jenis, Kuantitas, DAN Harga harus valid (Harga >= 0)
+            if (name && type && price >= 0 && qty > 0) { 
 
                 items.push({ 
                     name, 
@@ -380,13 +384,15 @@
 
                 // Reset form
                 itemNameInput.value = '';
-                itemPriceInput.value = ''; // Kosongkan tampilan harga
+                itemPriceInput.value = ''; 
                 itemQtyInput.value = '1';
+                itemTypeInput.value = ''; // Reset Jenis
+                
                 itemNameInput.focus();
             } else {
                  showCustomModal(
                     "Input Tidak Valid",
-                    "Pastikan Nama Barang ada di daftar master dan Jumlah lebih dari 0. Harga harus terisi otomatis.",
+                    "Pastikan Nama Barang, Jenis, Jumlah ( > 0 ), dan Harga Satuan ( >= 0 ) terisi dengan benar.",
                     [{
                         text: "Oke",
                         class: "bg-indigo-600 text-white hover:bg-indigo-700"
@@ -442,8 +448,9 @@
                             // Reset input form
                             itemNameInput.value = '';
                             itemPriceInput.value = ''; 
+                            itemTypeInput.value = '';
                             itemQtyInput.value = '1';
-
+                            
                             renderItems();
                         }
                     }
@@ -495,10 +502,13 @@
                             items = [];
                             customerNameInput.value = '';
                             customerName = '';
-                            itemNameInput.value = '';
-                            itemPriceInput.value = '';
-                            itemQtyInput.value = '1';
                             
+                            // Reset input form
+                            itemNameInput.value = '';
+                            itemPriceInput.value = ''; 
+                            itemTypeInput.value = '';
+                            itemQtyInput.value = '1';
+
                             renderItems();
                             loadHistory();
 
@@ -586,6 +596,13 @@
                             customerNameInput.value = invoice.customerName || '';
                             customerName = invoice.customerName || '';
                             items = JSON.parse(JSON.stringify(invoice.items)); 
+                            
+                            // Reset input form
+                            itemNameInput.value = '';
+                            itemPriceInput.value = '';
+                            itemTypeInput.value = '';
+                            itemQtyInput.value = '1';
+
                             renderItems();
                             // Sembunyikan riwayat agar fokus ke nota aktif
                             historyContent.classList.add('hidden'); 

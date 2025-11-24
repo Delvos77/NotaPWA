@@ -1,5 +1,5 @@
 // Nama cache unik untuk versi aplikasi ini
-const CACHE_NAME = 'nota-v1'; 
+const CACHE_NAME = 'nota-v2'; 
 
 // Daftar file yang merupakan bagian dari "app shell" (yang perlu di-cache)
 const urlsToCache = [
@@ -80,3 +80,4 @@ self.addEventListener('fetch', function(event) {
       );
   }
 });
+

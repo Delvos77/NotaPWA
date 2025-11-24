@@ -60,13 +60,14 @@
                    class="w-full p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 mb-4 bg-gray-800 text-white placeholder-gray-400">
 
             <form id="item-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <input type="text" id="item-name" placeholder="Nama Barang" required list="master-items"
+                <input type="text" id="item-name" placeholder="Nama Barang (Cari/Ketik)" required list="master-items"
                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 <datalist id="master-items">
                     </datalist> 
                 
-                <input type="number" id="item-price" placeholder="Harga Satuan (Rp)" required min="1"
-                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
+                <input type="text" id="item-price" placeholder="Harga Otomatis" readonly
+                       class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-white placeholder-gray-400 cursor-default">
+                       
                 <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
@@ -83,7 +84,8 @@
                     <tr>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">No</th>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-3/12">Barang</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Jenis</th> <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Harga</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Jenis</th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Harga</th>
                         <th class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Jml</th>
                         <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Subtotal</th>
                         <th id="aksi-header" class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Aksi</th>
@@ -149,7 +151,7 @@
         // --- CORE APPLICATION LOGIC ---
 
         // --- MASTER DATA: DAFTAR BARANG (SIMULASI DATABASE) ---
-        // Penambahan properti 'type'
+        // Master data sudah OK, tidak diubah
         const masterBarang = [
             { name: "Pulpen Standard", price: 3000, type: "ATK" }, 
             { name: "Buku Tulis Sinar Dunia", price: 6500, type: "ATK" },
@@ -160,7 +162,7 @@
         ];
 
         // --- FUNGSI BARU: MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
-        // Fungsi diubah untuk mengembalikan objek penuh (atau null)
+        // Fungsi sudah OK, tidak diubah
         function getPriceByName(name) {
             const item = masterBarang.find(barang => barang.name.toLowerCase() === name.toLowerCase());
             return item || null; 
@@ -272,8 +274,8 @@
             const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
 
             if (itemData) {
-                // Otomatis mengisi Harga Satuan jika ditemukan
-                itemPriceInput.value = itemData.price;
+                // Otomatis mengisi Harga Satuan jika ditemukan (Harga diformat Rupiah untuk display)
+                itemPriceInput.value = formatRupiah(itemData.price); 
             } else if (itemPriceInput.value !== "") {
                 // Jika nama barang tidak ada, hapus harga
                 itemPriceInput.value = ''; 
@@ -325,10 +327,12 @@
                     const row = document.createElement('tr');
                     // Style baris disesuaikan untuk dark mode
                     row.className = 'hover:bg-gray-700 transition duration-150';
+                    // KOREKSI: Struktur HTML di renderItems dibersihkan
                     row.innerHTML = `
                         <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-50">${index + 1}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.name}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.type || 'N/A'}</td> <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-right">${formatRupiah(item.price)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.type || 'N/A'}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-right">${formatRupiah(item.price)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-center">${item.qty}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-base font-semibold text-right text-white">${formatRupiah(subtotal)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-center aksi-cell">
@@ -352,35 +356,37 @@
             e.preventDefault();
             
             const nameInput = document.getElementById('item-name');
-            const priceInput = document.getElementById('item-price');
-            const qtyInput = document.getElementById('item-qty');
+            // priceInput digunakan hanya untuk tampilan, datanya diambil dari master
+            const qtyInput = document.getElementById('item-qty'); 
 
             const name = nameInput.value.trim();
-            const price = parseInt(priceInput.value);
             const qty = parseInt(qtyInput.value);
             
-            // Ambil data lengkap untuk mendapatkan Jenis Barang
+            // Ambil data lengkap untuk mendapatkan Jenis Barang dan Harga
             const itemData = getPriceByName(name);
 
-            if (name && price > 0 && qty > 0) {
+            // KOREKSI: Logika pengecekan menggunakan hasil lookup (itemData)
+            if (itemData && qty > 0) {
+                const price = itemData.price; // Ambil harga dari master
+                const type = itemData.type; // Ambil jenis dari master
+
                 items.push({ 
                     name, 
                     price, 
                     qty,
-                    // Simpan jenis barang. Gunakan 'Lain-lain' jika tidak ada di master.
-                    type: itemData ? itemData.type : 'Lain-lain' 
+                    type 
                 });
                 renderItems();
 
                 // Reset form
                 nameInput.value = '';
-                priceInput.value = '';
+                itemPriceInput.value = ''; // Kosongkan tampilan harga
                 qtyInput.value = '1';
                 nameInput.focus();
             } else {
                  showCustomModal(
                     "Input Tidak Valid",
-                    "Pastikan Nama Barang diisi, Harga dan Jumlah lebih dari 0.",
+                    "Pastikan Nama Barang ada di daftar master dan Jumlah lebih dari 0.",
                     [{
                         text: "Oke",
                         class: "bg-indigo-600 text-white hover:bg-indigo-700"

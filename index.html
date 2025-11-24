@@ -63,7 +63,8 @@
                 <input type="text" id="item-name" placeholder="Nama Barang" required list="master-items"
                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 <datalist id="master-items">
-                    </datalist>
+                    </datalist> 
+                
                 <input type="number" id="item-price" placeholder="Harga Satuan (Rp)" required min="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
@@ -81,21 +82,21 @@
                 <thead class="bg-gray-700">
                     <tr>
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">No</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-4/12">Barang</th>
-                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Harga</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-3/12">Barang</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Jenis</th> <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Harga</th>
                         <th class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Jml</th>
-                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-3/12">Subtotal</th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Subtotal</th>
                         <th id="aksi-header" class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="invoice-items" class="bg-gray-800 divide-y divide-gray-700">
                     <tr id="empty-state">
-                        <td colspan="6" class="px-3 py-4 text-center text-gray-400 italic">Belum ada barang di nota.</td>
+                        <td colspan="7" class="px-3 py-4 text-center text-gray-400 italic">Belum ada barang di nota.</td>
                     </tr>
                     </tbody>
                 <tfoot class="bg-gray-800">
                     <tr class="grand-total-row">
-                        <td colspan="4" class="px-3 py-4 text-right text-lg font-bold text-gray-100">TOTAL KESELURUHAN:</td>
+                        <td colspan="5" class="px-3 py-4 text-right text-lg font-bold text-gray-100">TOTAL KESELURUHAN:</td> 
                         <td id="grand-total" class="px-3 py-4 text-right text-2xl font-bold text-green-400" colspan="2">
                             Rp 0
                         </td>
@@ -145,25 +146,25 @@
     </div>
 
     <script type="module">
-        // --- START PERUBAHAN JAVASCRIPT ---
+        // --- CORE APPLICATION LOGIC ---
 
         // --- MASTER DATA: DAFTAR BARANG (SIMULASI DATABASE) ---
+        // Penambahan properti 'type'
         const masterBarang = [
-            { name: "Pulpen Standard", price: 3000 },
-            { name: "Buku Tulis Sinar Dunia", price: 6500 },
-            { name: "Albatros", price: 10000 }, 
-            { name: "Pensil 2B", price: 2500 },
-            { name: "Penghapus Kenko", price: 1500 },
-            { name: "Kertas HVS A4 80gr", price: 50000 }
+            { name: "Pulpen Standard", price: 3000, type: "ATK" }, 
+            { name: "Buku Tulis Sinar Dunia", price: 6500, type: "ATK" },
+            { name: "Albatros", price: 10000, type: "Kertas" }, 
+            { name: "Pensil 2B", price: 2500, type: "ATK" },
+            { name: "Penghapus Kenko", price: 1500, type: "ATK" },
+            { name: "Kertas HVS A4 80gr", price: 50000, type: "Kertas" }
         ];
 
-        // --- FUNGSI BARU: MENCARI HARGA BERDASARKAN NAMA ---
+        // --- FUNGSI BARU: MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
+        // Fungsi diubah untuk mengembalikan objek penuh (atau null)
         function getPriceByName(name) {
             const item = masterBarang.find(barang => barang.name.toLowerCase() === name.toLowerCase());
-            return item ? item.price : 0;
+            return item || null; 
         }
-
-        // --- CORE APPLICATION LOGIC ---
 
         const STORAGE_KEY = 'offline_invoice_history';
 
@@ -191,35 +192,12 @@
         const inputArea = document.getElementById('input-area');
         const historyArea = document.getElementById('history-area');
         const aksiHeader = document.getElementById('aksi-header');
-        
-        // Referensi DOM baru untuk fitur lookup
+
+
+        // Referensi DOM BARU untuk Datalist/Lookup
         const itemNameInput = document.getElementById('item-name');
         const itemPriceInput = document.getElementById('item-price');
         const datalistElement = document.getElementById('master-items');
-
-        // --- FUNGSI BARU: MENGISI DATALIST ---
-        function populateDatalist() {
-            datalistElement.innerHTML = ''; // Bersihkan dulu
-            masterBarang.forEach(barang => {
-                const option = document.createElement('option');
-                option.value = barang.name;
-                datalistElement.appendChild(option);
-            });
-        }
-
-        // --- FUNGSI BARU: OTOMATISASI HARGA (EVENT LISTENER) ---
-        itemNameInput.addEventListener('input', function() {
-            const selectedName = this.value.trim();
-            const price = getPriceByName(selectedName); // Menggunakan fungsi yang baru ditambahkan
-
-            if (price > 0) {
-                // Otomatis mengisi Harga Satuan jika ditemukan
-                itemPriceInput.value = price;
-            } else if (itemPriceInput.value !== "") {
-                // Jika nama barang tidak ada di master, hapus harga jika isian sebelumnya ada
-                itemPriceInput.value = ''; 
-            }
-        });
 
         // Referensi DOM untuk Modal
         const customModal = document.getElementById('custom-modal');
@@ -278,6 +256,31 @@
             });
         }
         
+        // Fungsi untuk mengisi datalist (BARU)
+        function populateDatalist() {
+            datalistElement.innerHTML = '';
+            masterBarang.forEach(barang => {
+                const option = document.createElement('option');
+                option.value = barang.name;
+                datalistElement.appendChild(option);
+            });
+        }
+        
+        // Event listener untuk lookup harga otomatis saat input nama barang berubah (BARU)
+        itemNameInput.addEventListener('input', function() {
+            const selectedName = this.value.trim();
+            const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
+
+            if (itemData) {
+                // Otomatis mengisi Harga Satuan jika ditemukan
+                itemPriceInput.value = itemData.price;
+            } else if (itemPriceInput.value !== "") {
+                // Jika nama barang tidak ada, hapus harga
+                itemPriceInput.value = ''; 
+            }
+        });
+
+
         // Fungsi untuk memperbarui Customer Name
         customerNameInput.addEventListener('input', () => {
             customerName = customerNameInput.value.trim();
@@ -325,7 +328,7 @@
                     row.innerHTML = `
                         <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-50">${index + 1}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.name}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-right">${formatRupiah(item.price)}</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.type || 'N/A'}</td> <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-right">${formatRupiah(item.price)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-center">${item.qty}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-base font-semibold text-right text-white">${formatRupiah(subtotal)}</td>
                         <td class="px-3 py-3 whitespace-nowrap text-center aksi-cell">
@@ -355,9 +358,18 @@
             const name = nameInput.value.trim();
             const price = parseInt(priceInput.value);
             const qty = parseInt(qtyInput.value);
+            
+            // Ambil data lengkap untuk mendapatkan Jenis Barang
+            const itemData = getPriceByName(name);
 
             if (name && price > 0 && qty > 0) {
-                items.push({ name, price, qty });
+                items.push({ 
+                    name, 
+                    price, 
+                    qty,
+                    // Simpan jenis barang. Gunakan 'Lain-lain' jika tidak ada di master.
+                    type: itemData ? itemData.type : 'Lain-lain' 
+                });
                 renderItems();
 
                 // Reset form
@@ -496,7 +508,7 @@
             let detailHtml = `<p class="font-bold text-gray-300">Pelanggan: ${invoice.customerName || 'Tidak Tercatat'}</p>`;
             detailHtml += `<ul class="list-disc list-inside space-y-1 text-sm text-gray-400 mt-2 hidden">`; // Mulai tersembunyi
             invoice.items.forEach(item => {
-                detailHtml += `<li>${item.name} (${item.qty} x ${formatRupiah(item.price)}) = ${formatRupiah(item.price * item.qty)}</li>`;
+                detailHtml += `<li>${item.name} (${item.type || 'N/A'}) - ${item.qty} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.qty)}</li>`; // Tambahkan Jenis Barang
             });
             detailHtml += `</ul>`;
             return detailHtml;
@@ -686,11 +698,10 @@
         // Inisialisasi tampilan saat aplikasi dimuat
         document.addEventListener('DOMContentLoaded', () => {
             renderItems(); // Render item kosong saat pertama kali dimuat
-            populateDatalist(); // <--- TAMBAHAN: Muat opsi datalist saat startup
+            populateDatalist(); // BARU: Isi Datalist
             loadHistory(); // Muat riwayat dari localStorage
             registerServiceWorker(); // PWA: Daftarkan Service Worker
         });
-        // --- END PERUBAHAN JAVASCRIPT ---
 
     </script>
 

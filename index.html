@@ -59,20 +59,24 @@
             <input type="text" id="customer-name" placeholder="Nama Pelanggan (Cth: Toko ABC)"
                    class="w-full p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 mb-4 bg-gray-800 text-white placeholder-gray-400">
 
-            <form id="item-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            <form id="item-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                 
-                <select id="item-name" required
-                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                    <option value="" disabled selected>Pilih Barang (Pilih/Ketik)</option>
-                    </select>
+                <input type="text" id="item-name" placeholder="Nama Barang (Cari/Ketik)" required list="master-items"
+                       class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
+                <datalist id="master-items">
+                    </datalist> 
+                
+                <input type="text" id="item-type" placeholder="Jenis Otomatis" readonly
+                       class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-white placeholder-gray-400 cursor-default">
+                
                 <input type="text" id="item-price" placeholder="Harga Otomatis" readonly
                        class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-white placeholder-gray-400 cursor-default">
                        
-                <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
+                <input type="number" id="item-qty" placeholder="Jml" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
                 <button type="submit" 
-                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98]">
+                        class="col-span-full p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98]">
                     Tambah ke Nota
                 </button>
             </form>
@@ -151,7 +155,6 @@
         // --- CORE APPLICATION LOGIC ---
 
         // --- MASTER DATA: DAFTAR BARANG (SIMULASI DATABASE) ---
-        // Master data sudah OK, tidak diubah
         const masterBarang = [
             { name: "Pulpen Standard", price: 3000, type: "ATK" }, 
             { name: "Buku Tulis Sinar Dunia", price: 6500, type: "ATK" },
@@ -161,8 +164,7 @@
             { name: "Kertas HVS A4 80gr", price: 50000, type: "Kertas" }
         ];
 
-        // --- FUNGSI BARU: MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
-        // Fungsi sudah OK, tidak diubah
+        // --- FUNGSI MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
         function getPriceByName(name) {
             const item = masterBarang.find(barang => barang.name.toLowerCase() === name.toLowerCase());
             return item || null; 
@@ -177,7 +179,6 @@
         const customerNameInput = document.getElementById('customer-name');
         const itemForm = document.getElementById('item-form');
         const itemsContainer = document.getElementById('invoice-items');
-        // Grand Total sekarang berada di TFOOT
         const grandTotalElement = document.getElementById('grand-total'); 
         const emptyState = document.getElementById('empty-state');
         const saveButton = document.getElementById('save-button');
@@ -197,9 +198,10 @@
 
 
         // Referensi DOM BARU untuk Datalist/Lookup
-        const itemNameInput = document.getElementById('item-name'); // Sekarang mereferensi SELECT
+        const itemNameInput = document.getElementById('item-name');
         const itemPriceInput = document.getElementById('item-price');
-        // const datalistElement = document.getElementById('master-items'); // Datalist dihapus
+        const itemTypeInput = document.getElementById('item-type'); // <-- BARU: Referensi untuk input jenis barang
+        const datalistElement = document.getElementById('master-items');
 
         // Referensi DOM untuk Modal
         const customModal = document.getElementById('custom-modal');
@@ -258,28 +260,29 @@
             });
         }
         
-        // PERUBAHAN 2A: Fungsi untuk mengisi elemen SELECT (Menggantikan populateDatalist)
-        function populateSelect() {
-            itemNameInput.innerHTML = '<option value="" disabled selected>Pilih Barang (Pilih/Ketik)</option>';
+        // Fungsi untuk mengisi datalist
+        function populateDatalist() {
+            datalistElement.innerHTML = '';
             masterBarang.forEach(barang => {
                 const option = document.createElement('option');
                 option.value = barang.name;
-                option.textContent = barang.name;
-                itemNameInput.appendChild(option);
+                datalistElement.appendChild(option);
             });
         }
         
-        // PERUBAHAN 2B: Event listener untuk lookup harga otomatis saat pilihan di SELECT berubah
-        itemNameInput.addEventListener('change', function() {
+        // Event listener untuk lookup harga dan jenis otomatis saat input nama barang berubah (DIPERBARUI)
+        itemNameInput.addEventListener('input', function() {
             const selectedName = this.value.trim();
             const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
 
             if (itemData) {
-                // Otomatis mengisi Harga Satuan jika ditemukan (Harga diformat Rupiah untuk display)
+                // Otomatis mengisi Harga Satuan dan Jenis jika ditemukan
                 itemPriceInput.value = formatRupiah(itemData.price); 
-            } else if (itemPriceInput.value !== "") {
-                // Jika nama barang tidak ada, hapus harga
+                itemTypeInput.value = itemData.type; // <-- BARU: Isi Jenis
+            } else {
+                // Jika nama barang tidak ditemukan, hapus Harga dan Jenis
                 itemPriceInput.value = ''; 
+                itemTypeInput.value = ''; // <-- BARU: Kosongkan Jenis
             }
         });
 
@@ -356,7 +359,7 @@
         itemForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const nameInput = document.getElementById('item-name'); // Sekarang SELECT
+            const nameInput = document.getElementById('item-name');
             // priceInput digunakan hanya untuk tampilan, datanya diambil dari master
             const qtyInput = document.getElementById('item-qty'); 
 
@@ -379,15 +382,16 @@
                 });
                 renderItems();
 
-                // Reset form
-                nameInput.value = ''; // Reset SELECT ke opsi default/kosong
+                // Reset form (DIPERBARUI)
+                nameInput.value = '';
                 itemPriceInput.value = ''; // Kosongkan tampilan harga
+                itemTypeInput.value = ''; // <-- BARU: Kosongkan Jenis
                 qtyInput.value = '1';
-                customerNameInput.focus(); // Fokus ke Customer Name setelah submit
+                nameInput.focus();
             } else {
                  showCustomModal(
                     "Input Tidak Valid",
-                    "Pastikan Nama Barang telah dipilih dari daftar dan Jumlah lebih dari 0.",
+                    "Pastikan Nama Barang ada di daftar master dan Jumlah lebih dari 0.",
                     [{
                         text: "Oke",
                         class: "bg-indigo-600 text-white hover:bg-indigo-700"
@@ -440,7 +444,7 @@
                             customerNameInput.value = '';
                             customerName = '';
                             itemPriceInput.value = ''; // Pastikan harga kosong
-                            itemNameInput.value = ''; // Pastikan select kembali ke default
+                            itemTypeInput.value = ''; // Pastikan jenis kosong
                             renderItems();
                         }
                     }
@@ -493,7 +497,7 @@
                             customerNameInput.value = '';
                             customerName = '';
                             itemPriceInput.value = '';
-                            itemNameInput.value = '';
+                            itemTypeInput.value = '';
                             renderItems();
                             loadHistory();
 
@@ -581,8 +585,8 @@
                             customerNameInput.value = invoice.customerName || '';
                             customerName = invoice.customerName || '';
                             items = JSON.parse(JSON.stringify(invoice.items)); 
-                            itemPriceInput.value = ''; // Kosongkan harga karena item-name sudah diisi (tidak perlu lookup)
-                            itemNameInput.value = ''; // Kosongkan select karena item-name sudah diisi (tidak perlu lookup)
+                            itemPriceInput.value = ''; // Kosongkan harga dan jenis
+                            itemTypeInput.value = '';
                             renderItems();
                             // Sembunyikan riwayat agar fokus ke nota aktif
                             historyContent.classList.add('hidden'); 
@@ -711,7 +715,7 @@
         // Inisialisasi tampilan saat aplikasi dimuat
         document.addEventListener('DOMContentLoaded', () => {
             renderItems(); // Render item kosong saat pertama kali dimuat
-            populateSelect(); // PERUBAHAN 2C: Panggil fungsi baru untuk mengisi SELECT
+            populateDatalist(); // Isi Datalist
             loadHistory(); // Muat riwayat dari localStorage
             registerServiceWorker(); // PWA: Daftarkan Service Worker
         });

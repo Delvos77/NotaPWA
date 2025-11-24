@@ -1,0 +1,21 @@
+{
+  "name": "Nota Penjualan Offline",
+  "short_name": "Nota PWA",
+  "description": "Aplikasi pencatat nota penjualan yang dapat berjalan secara offline.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#1f2937",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/1f2937/ffffff?text=NP",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/1f2937/ffffff?text=NP",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

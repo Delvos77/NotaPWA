@@ -40,13 +40,7 @@
             border-top: 3px solid #10b981; /* Garis tebal hijau di atas total tetap */
         }
 
-        /* Style untuk input yang "terkunci" setelah lookup */
-        .input-locked {
-            pointer-events: none !important; /* Mencegah input diketik/diubah */
-            background-color: #374151 !important; /* Warna latar yang menunjukkan terkunci */
-            color: #d1d5db !important;
-            cursor: default !important;
-        }
+        /* Hapus class .input-locked karena sudah tidak digunakan */
     </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
@@ -69,17 +63,16 @@
 
             <form id="item-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                 
-                <input type="text" id="item-name" placeholder="Nama Barang (Cari/Ketik)" required list="master-items"
+                <input type="text" id="item-name" placeholder="Nama Barang (Ketik Manual)" required
                        class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                <datalist id="master-items">
-                    </datalist> 
                 
-                <input type="text" id="item-type" placeholder="Jenis Otomatis (Ubah jika perlu)" 
+                <input type="text" id="item-type" placeholder="Jenis (Pilih/Ketik)" required list="master-types"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                       
-                <input type="text" id="item-price" placeholder="Harga Otomatis" readonly
-                       class="p-3 border border-gray-600 rounded-lg transition duration-150 bg-gray-800 text-white placeholder-gray-400 cursor-default">
-                       
+                <datalist id="master-types"></datalist>
+                
+                <input type="number" id="item-price-manual" placeholder="Harga Satuan" required min="1"
+                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
+                
                 <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
@@ -171,6 +164,10 @@
             { name: "Penghapus Kenko", price: 1500, type: "ATK" },
             { name: "Kertas HVS A4 80gr", price: 50000, type: "Kertas" }
         ];
+        
+        // --- MASTER DATA: DAFTAR JENIS (BARU) ---
+        // Kita hanya mengambil tipe unik dari masterBarang sebagai daftar pilihan Jenis
+        const uniqueTypes = [...new Set(masterBarang.map(item => item.type))];
 
         // --- FUNGSI MENCARI HARGA DAN JENIS BERDASARKAN NAMA ---
         function getPriceByName(name) {
@@ -182,7 +179,6 @@
 
         let items = [];
         let customerName = '';
-        let selectedItemData = null; // <-- BARU: Variabel untuk menyimpan data item yang dipilih terakhir
 
         // DOM References
         const customerNameInput = document.getElementById('customer-name');
@@ -206,11 +202,12 @@
         const aksiHeader = document.getElementById('aksi-header');
 
 
-        // Referensi DOM untuk Datalist/Lookup
+        // Referensi DOM BARU untuk Input Form
         const itemNameInput = document.getElementById('item-name');
-        const itemPriceInput = document.getElementById('item-price');
-        const itemTypeInput = document.getElementById('item-type'); // <-- Kini editable
-        const datalistElement = document.getElementById('master-items');
+        const itemTypeInput = document.getElementById('item-type'); // Jenis (Lookup)
+        const itemPriceManualInput = document.getElementById('item-price-manual'); // Harga (Manual)
+        const itemQtyInput = document.getElementById('item-qty');
+        const masterTypesDatalist = document.getElementById('master-types'); // Datalist untuk Jenis
 
         // Referensi DOM untuk Modal
         const customModal = document.getElementById('custom-modal');
@@ -269,42 +266,17 @@
             });
         }
         
-        // Fungsi untuk mengisi datalist
+        // FUNGSI BARU: Mengisi datalist untuk JENIS BARANG
         function populateDatalist() {
-            datalistElement.innerHTML = '';
-            masterBarang.forEach(barang => {
+            masterTypesDatalist.innerHTML = '';
+            uniqueTypes.forEach(type => {
                 const option = document.createElement('option');
-                option.value = barang.name;
-                datalistElement.appendChild(option);
+                option.value = type;
+                masterTypesDatalist.appendChild(option);
             });
         }
         
-        // Event listener untuk lookup harga dan jenis otomatis saat input nama barang berubah (DIPERBARUI)
-        itemNameInput.addEventListener('input', function() {
-            const selectedName = this.value.trim();
-            const itemData = getPriceByName(selectedName); // Mengembalikan objek atau null
-
-            if (itemData) {
-                selectedItemData = itemData; // Simpan data item yang terpilih
-                
-                // Otomatis mengisi Harga Satuan dan Jenis (Harga diformat Rupiah untuk display)
-                itemPriceInput.value = formatRupiah(itemData.price); 
-                itemTypeInput.value = itemData.type; // Isi Jenis (kini editable)
-                
-                // Memberikan style 'terkunci' pada Nama Barang yang sudah terpilih
-                itemNameInput.classList.add('input-locked');
-                
-            } else {
-                // Jika nama barang tidak ditemukan, hapus Harga dan Jenis
-                selectedItemData = null;
-                itemPriceInput.value = ''; 
-                itemTypeInput.value = ''; 
-                
-                // Kembalikan style normal (membuatnya bisa diketik lagi)
-                itemNameInput.classList.remove('input-locked');
-            }
-        });
-
+        // HAPUS event listener itemNameInput, karena sekarang inputnya manual
 
         // Fungsi untuk memperbarui Customer Name
         customerNameInput.addEventListener('input', () => {
@@ -374,49 +346,38 @@
             calculateTotal(); 
         }
 
-        // Event listener untuk form tambah item (DIPERBARUI)
+        // Event listener untuk form tambah item (DIPERBARUI TOTAL)
         itemForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const nameInput = document.getElementById('item-name');
-            const qtyInput = document.getElementById('item-qty'); 
+            const name = itemNameInput.value.trim();
+            const type = itemTypeInput.value.trim();
+            // Ambil nilai Harga Manual dan konversi ke float/number
+            const price = parseFloat(itemPriceManualInput.value); 
+            const qty = parseInt(itemQtyInput.value);
             
-            // Ambil data dari variabel lookup
-            const itemData = selectedItemData; 
-            
-            // Ambil jenis dari input yang kini editable
-            const type = itemTypeInput.value.trim(); 
-            
-            const qty = parseInt(qtyInput.value);
-            
-            // Logika pengecekan menggunakan hasil lookup (itemData)
-            if (itemData && qty > 0 && type !== '') {
-                const name = itemData.name; // Ambil nama dari data lookup
-                const price = itemData.price; // Ambil harga dari data lookup
-
+            // Logika pengecekan menggunakan input manual
+            if (name !== '' && type !== '' && price > 0 && qty > 0) {
+                
                 items.push({ 
                     name, 
                     price, 
                     qty,
-                    type // Menggunakan nilai JENIS yang diinput/diubah pengguna
+                    type 
                 });
                 renderItems();
 
-                // Reset form (DIPERBARUI)
-                nameInput.value = '';
-                itemPriceInput.value = ''; 
+                // Reset form
+                itemNameInput.value = '';
                 itemTypeInput.value = ''; 
-                qtyInput.value = '1';
+                itemPriceManualInput.value = ''; 
+                itemQtyInput.value = '1';
                 
-                // Reset state lookup Nama Barang
-                selectedItemData = null;
-                nameInput.classList.remove('input-locked'); // Hapus style kunci
-                
-                nameInput.focus();
+                itemNameInput.focus();
             } else {
                  showCustomModal(
                     "Input Tidak Valid",
-                    "Pastikan Nama Barang sudah dipilih dari daftar, Jenis terisi, dan Jumlah lebih dari 0.",
+                    "Pastikan Nama Barang, Jenis (pilih dari daftar atau ketik), Harga Satuan (lebih dari 0), dan Jumlah (lebih dari 0) terisi dengan benar.",
                     [{
                         text: "Oke",
                         class: "bg-indigo-600 text-white hover:bg-indigo-700"
@@ -471,10 +432,9 @@
                             
                             // Reset state input item
                             itemNameInput.value = '';
-                            itemPriceInput.value = ''; 
                             itemTypeInput.value = '';
-                            selectedItemData = null;
-                            itemNameInput.classList.remove('input-locked');
+                            itemPriceManualInput.value = '';
+                            itemQtyInput.value = '1';
                             
                             renderItems();
                         }
@@ -528,10 +488,9 @@
                             customerNameInput.value = '';
                             customerName = '';
                             itemNameInput.value = '';
-                            itemPriceInput.value = '';
                             itemTypeInput.value = '';
-                            selectedItemData = null;
-                            itemNameInput.classList.remove('input-locked');
+                            itemPriceManualInput.value = '';
+                            itemQtyInput.value = '1';
 
                             renderItems();
                             loadHistory();
@@ -621,12 +580,11 @@
                             customerName = invoice.customerName || '';
                             items = JSON.parse(JSON.stringify(invoice.items)); 
                             
-                            // Reset state input item aktif (DIPERBARUI)
+                            // Reset input item aktif
                             itemNameInput.value = '';
-                            itemPriceInput.value = ''; 
                             itemTypeInput.value = '';
-                            selectedItemData = null;
-                            itemNameInput.classList.remove('input-locked');
+                            itemPriceManualInput.value = '';
+                            itemQtyInput.value = '1';
 
                             renderItems();
                             // Sembunyikan riwayat agar fokus ke nota aktif
@@ -756,7 +714,7 @@
         // Inisialisasi tampilan saat aplikasi dimuat
         document.addEventListener('DOMContentLoaded', () => {
             renderItems(); // Render item kosong saat pertama kali dimuat
-            populateDatalist(); // Isi Datalist
+            populateDatalist(); // BARU: Isi Datalist untuk Jenis Barang
             loadHistory(); // Muat riwayat dari localStorage
             registerServiceWorker(); // PWA: Daftarkan Service Worker
         });

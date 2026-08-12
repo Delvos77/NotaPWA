@@ -5,8 +5,8 @@ const LOCAL_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './Logo192.svg',
-  './Logo512.svg'
+  './Logo192.png',
+  './Logo512.png'
 ];
 
 // 2. Resource eksternal (CDN)

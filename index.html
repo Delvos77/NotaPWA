@@ -66,7 +66,6 @@
                 <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
                        class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
                 
-                <!-- PERBAIKAN: Menghapus markdown **md:col-span-1** yang corrupt -->
                 <button type="submit" 
                         class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full md:col-span-1">
                         Add Nota
@@ -147,7 +146,6 @@
 
     <script type="module">
         // --- MASTER DATA ---
-        // PERBAIKAN: Memperbaiki nama duplikat Ap1BB (340Hr)
         const masterBarang = [
             { name: "Ac1", price: 4000, type: "Ac260" }, 
             { name: "Ap1", price: 4000, type: "Ap150" },
@@ -532,7 +530,7 @@
             }
         }
         
-        // --- PROSES GENERATE PNG DIPERBARUI UNTUK IPAD & DESKTOP ---
+        // --- PROSES GENERATE PNG (EKSPLISIT DIBERSIHKAN DARI POTONGAN Bawah IPAD) ---
         window.generatePNG = async function() {
             if (items.length === 0) {
                  showCustomModal("Gagal Mencetak", "Nota kosong, tidak ada yang bisa dicetak.", [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
@@ -554,18 +552,27 @@
             aksiHeader.classList.add('print-hide');
             printInfoDisplay.classList.remove('hidden');
 
-            const dpr = window.devicePixelRatio || 1;
-            const finalScale = Math.max(2, dpr); 
-            
+            // PERBAIKAN IPAD: Reset scroll ke atas sebelum capture
+            window.scrollTo(0, 0);
+
+            // PERBAIKAN IPAD: Beri padding bawah sementara agar area total tidak terpotong
+            const originalPaddingBottom = input.style.paddingBottom;
+            input.style.paddingBottom = '32px';
+
             try {
                 const canvas = await html2canvas(input, { 
-                    scale: finalScale, 
+                    scale: 2, 
                     logging: false, 
                     useCORS: true, 
-                    backgroundColor: '#1f2937' 
+                    backgroundColor: '#1f2937',
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: input.scrollWidth,
+                    windowHeight: input.scrollHeight,
+                    x: 0,
+                    y: 0
                 });
 
-                // Konversi canvas ke Blob (Jauh lebih stabil di iOS/iPad daripada DataURL)
                 canvas.toBlob(async (blob) => {
                     if (!blob) {
                         alert("Gagal mengolah gambar.");
@@ -574,7 +581,6 @@
 
                     const file = new File([blob], fileName, { type: 'image/png' });
 
-                    // 1. Opsi Utama iPad / iOS: Gunakan Web Share API jika didukung
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
@@ -588,7 +594,6 @@
                             }
                         }
                     } else {
-                        // 2. Fallback untuk Browser Laptop/Android tanpa Web Share API
                         const blobUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = blobUrl;
@@ -604,6 +609,7 @@
                 console.error("Gagal membuat PNG:", error);
                 showCustomModal("Error PNG", "Gagal membuat file PNG. Cek konsol browser untuk detail.", [{ text: "Tutup", class: "bg-red-600 text-white hover:bg-red-700" }]);
             } finally {
+                input.style.paddingBottom = originalPaddingBottom;
                 elementsToHide.forEach(el => el.classList.remove('print-hide'));
                 aksiCells.forEach(el => el.classList.remove('print-hide'));
                 aksiHeader.classList.remove('print-hide');

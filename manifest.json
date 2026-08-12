@@ -1,6 +1,7 @@
 {
+  "id": "/nota-pwa-v2",
   "name": "Nota Penjualan Offline",
-  "short_name": "Nota PWA",
+  "short_name": "Nota Baru",
   "description": "Aplikasi pencatat nota penjualan yang dapat berjalan secara offline.",
   "start_url": "./index.html",
   "display": "standalone",

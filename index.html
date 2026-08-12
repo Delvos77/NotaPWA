@@ -26,11 +26,19 @@
         .history-header:hover {
             background-color: #374151; 
         }
-        .print-hide {
-            display: none !important;
-        }
         .grand-total-row {
             border-top: 3px solid #10b981; 
+        }
+        /* Container tersembunyi khusus ekspor gambar */
+        #print-render-area {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 800px;
+            background-color: #1f2937;
+            color: #f3f4f6;
+            padding: 32px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -41,11 +49,6 @@
         <h1 class="text-3xl sm:text-4xl font-bold text-center text-white mb-6 border-b border-gray-700 pb-3">
             Nota
         </h1>
-
-        <div id="print-info-display" class="mb-4 p-2 border-b border-gray-600 hidden">
-            <p class="text-lg font-semibold text-gray-100">Pelanggan: <span id="print-customer-name"></span></p>
-            <p class="text-sm text-gray-400">Tanggal Cetak: <span id="print-date"></span></p>
-        </div>
         
         <div id="input-area" class="mb-8 p-5 bg-gray-700 rounded-lg border border-gray-600">
             <h2 class="text-xl font-semibold mb-4 text-white">Info Pelanggan & Item</h2>
@@ -144,6 +147,9 @@
 
     </div>
 
+    <!-- ELEMEN KHUSUS DOKUMEN CETAK (MENGHINDARI BUG CLIPPING IPAD) -->
+    <div id="print-render-area"></div>
+
     <script type="module">
         // --- MASTER DATA ---
         const masterBarang = [
@@ -182,17 +188,10 @@
         const saveButton = document.getElementById('save-button');
         const clearButton = document.getElementById('clear-button-bottom');
         const printImageButton = document.getElementById('print-image-button'); 
-        const printInfoDisplay = document.getElementById('print-info-display'); 
-        const printCustomerName = document.getElementById('print-customer-name'); 
-        const printDate = document.getElementById('print-date'); 
         const historyHeader = document.getElementById('history-header');
         const historyContent = document.getElementById('history-content');
         const historyToggleIcon = document.getElementById('history-toggle-icon');
         const invoicesList = document.getElementById('invoices-list');
-        const actionsArea = document.getElementById('actions-area');
-        const inputArea = document.getElementById('input-area');
-        const historyArea = document.getElementById('history-area');
-        const aksiHeader = document.getElementById('aksi-header');
 
         const itemNameInput = document.getElementById('item-name-manual');
         const itemTypeInput = document.getElementById('item-type-input');
@@ -530,48 +529,76 @@
             }
         }
         
-        // --- PROSES GENERATE PNG (EKSPLISIT DIBERSIHKAN DARI POTONGAN Bawah IPAD) ---
+        // --- PROSES GENERATE PNG SOLUSI OFF-SCREEN (100% BEBAS POTONG) ---
         window.generatePNG = async function() {
             if (items.length === 0) {
                  showCustomModal("Gagal Mencetak", "Nota kosong, tidak ada yang bisa dicetak.", [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
                 return;
             }
 
-            const input = document.getElementById('app-container');
             const currentCustomer = customerNameInput.value.trim() || 'Pelanggan Umum';
             const fileName = `Nota-${currentCustomer.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.png`;
+            const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-            printCustomerName.textContent = currentCustomer;
-            printDate.textContent = new Date().toLocaleString('id-ID');
+            // Buat HTML khusus ekspor secara mandiri
+            const renderArea = document.getElementById('print-render-area');
+            let tableRows = '';
+            items.forEach((item, index) => {
+                const subtotal = item.price * item.qty;
+                tableRows += `
+                    <tr style="border-bottom: 1px solid #374151;">
+                        <td style="padding: 12px; font-size: 14px;">${index + 1}</td>
+                        <td style="padding: 12px; font-size: 14px;">${item.name}</td>
+                        <td style="padding: 12px; font-size: 14px;">${item.type || 'N/A'}</td>
+                        <td style="padding: 12px; font-size: 14px; text-align: right;">${formatRupiah(item.price)}</td>
+                        <td style="padding: 12px; font-size: 14px; text-align: center;">${item.qty}</td>
+                        <td style="padding: 12px; font-size: 14px; text-align: right; font-weight: 600; color: #ffffff;">${formatRupiah(subtotal)}</td>
+                    </tr>
+                `;
+            });
 
-            const elementsToHide = [inputArea, actionsArea, historyArea];
-            const aksiCells = itemsContainer.querySelectorAll('.aksi-cell');
-
-            elementsToHide.forEach(el => el.classList.add('print-hide'));
-            aksiCells.forEach(el => el.classList.add('print-hide'));
-            aksiHeader.classList.add('print-hide');
-            printInfoDisplay.classList.remove('hidden');
-
-            // PERBAIKAN IPAD: Reset scroll ke atas sebelum capture
-            window.scrollTo(0, 0);
-
-            // PERBAIKAN IPAD: Beri padding bawah sementara agar area total tidak terpotong
-            const originalPaddingBottom = input.style.paddingBottom;
-            input.style.paddingBottom = '32px';
+            renderArea.innerHTML = `
+                <div style="font-family: 'Inter', sans-serif; background-color: #1f2937; color: #f3f4f6; padding: 24px; border-radius: 8px;">
+                    <h1 style="font-size: 28px; font-weight: bold; text-align: center; color: #ffffff; margin-bottom: 20px; border-bottom: 1px solid #374151; padding-bottom: 12px;">Nota Penjualan</h1>
+                    <div style="margin-bottom: 20px; border-bottom: 1px solid #4b5563; padding-bottom: 12px;">
+                        <p style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin: 0;">Pelanggan: ${currentCustomer}</p>
+                        <p style="font-size: 14px; color: #9ca3af; margin: 4px 0 0 0;">Tanggal: ${new Date().toLocaleString('id-ID')}</p>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #374151; color: #d1d5db; text-transform: uppercase; font-size: 12px; text-align: left;">
+                                <th style="padding: 10px; width: 8%;">No</th>
+                                <th style="padding: 10px; width: 32%;">Barang</th>
+                                <th style="padding: 10px; width: 20%;">Jenis</th>
+                                <th style="padding: 10px; text-align: right; width: 15%;">Harga</th>
+                                <th style="padding: 10px; text-align: center; width: 10%;">Jml</th>
+                                <th style="padding: 10px; text-align: right; width: 15%;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                        <tfoot>
+                            <tr style="border-top: 3px solid #10b981; background-color: #1f2937;">
+                                <td colspan="4" style="padding: 16px; text-align: right; font-size: 18px; font-weight: bold; color: #f3f4f6;">TOTAL KESELURUHAN:</td>
+                                <td colspan="2" style="padding: 16px; text-align: right; font-size: 22px; font-weight: bold; color: #34d399;">${formatRupiah(grandTotal)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
 
             try {
-                const canvas = await html2canvas(input, { 
+                // Render elemen tersembunyi yang berukuran tetap & tidak dipengaruhi scroll iPad
+                const canvas = await html2canvas(renderArea, { 
                     scale: 2, 
                     logging: false, 
                     useCORS: true, 
-                    backgroundColor: '#1f2937',
-                    scrollX: 0,
-                    scrollY: 0,
-                    windowWidth: input.scrollWidth,
-                    windowHeight: input.scrollHeight,
-                    x: 0,
-                    y: 0
+                    backgroundColor: '#1f2937'
                 });
+
+                // Bersihkan DOM sementara
+                renderArea.innerHTML = '';
 
                 canvas.toBlob(async (blob) => {
                     if (!blob) {
@@ -606,14 +633,9 @@
                 }, 'image/png');
 
             } catch (error) {
+                renderArea.innerHTML = '';
                 console.error("Gagal membuat PNG:", error);
                 showCustomModal("Error PNG", "Gagal membuat file PNG. Cek konsol browser untuk detail.", [{ text: "Tutup", class: "bg-red-600 text-white hover:bg-red-700" }]);
-            } finally {
-                input.style.paddingBottom = originalPaddingBottom;
-                elementsToHide.forEach(el => el.classList.remove('print-hide'));
-                aksiCells.forEach(el => el.classList.remove('print-hide'));
-                aksiHeader.classList.remove('print-hide');
-                printInfoDisplay.classList.add('hidden');
             }
         };
 

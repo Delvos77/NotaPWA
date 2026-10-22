@@ -3,206 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOTA</title>
+    <title>VosPrint - Nota Digital</title>
     
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#1f2937"/>
+    <meta name="theme-color" content="#0b0f19"/>
     
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML2Canvas CDN untuk Ekspor Gambar -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; 
-            color: #f3f4f6; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #080c14;
+            color: #f1f5f9;
         }
-        .history-header {
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.2s;
-        }
-        .history-header:hover {
-            background-color: #374151; 
-        }
-        .grand-total-row {
-            border-top: 3px solid #10b981; 
-        }
-        /* Container tersembunyi khusus ekspor gambar */
+
+        /* Container Tersembunyi Khusus Ekspor PNG (Rasio Presisi & Anti-Clipping) */
         #print-render-area {
-            position: absolute;
+            position: fixed;
             left: -9999px;
             top: -9999px;
-            width: 800px;
-            background-color: #1f2937;
-            color: #f3f4f6;
+            width: 820px;
+            background-color: #ffffff;
+            color: #0f172a;
             padding: 32px;
             box-sizing: border-box;
+            z-index: -100;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-render-area, #print-render-area * {
+                visibility: visible;
+            }
+            #print-render-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 18px;
+            }
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
+<body class="p-3 sm:p-6 md:p-8 min-h-screen flex flex-col items-center">
 
-    <div id="app-container" class="w-full max-w-2xl bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-8 md:p-10 border border-gray-700">
-        
-        <h1 class="text-3xl sm:text-4xl font-bold text-center text-white mb-6 border-b border-gray-700 pb-3">
-            Nota
-        </h1>
-        
-        <div id="input-area" class="mb-8 p-5 bg-gray-700 rounded-lg border border-gray-600">
-            <h2 class="text-xl font-semibold mb-4 text-white">Info Pelanggan & Item</h2>
-            <input type="text" id="customer-name" placeholder="Nama Pelanggan (Cth: Toko ABC)"
-                   class="w-full p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 mb-4 bg-gray-800 text-white placeholder-gray-400">
+    <div id="app-container" class="w-full max-w-5xl space-y-6">
 
-            <form id="item-form" class="grid grid-cols-1 md:grid-cols-6 gap-4 mt-4">
-                <input type="text" id="item-name-manual" placeholder="Nama Barang (Ketik Manual)" required 
-                       class="col-span-1 md:col-span-2 p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                
-                <input type="text" id="item-type-input" placeholder="Jenis Barang (Pilih/Ketik)" required list="master-types"
-                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                <datalist id="master-types"></datalist>
+        <!-- HEADER APLIKASI (BERSIH & MINIMALIS) -->
+        <header class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3.5">
+                <!-- LOGO RESMI VOSPRINT PRESISI TINGGI -->
+                <div id="brand-logo-preview" class="w-12 h-12 rounded-xl bg-black border border-slate-700/80 flex items-center justify-center shadow-md p-1 flex-shrink-0">
+                    <svg viewBox="0 0 400 400" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="400" fill="#000000"/>
+                        <!-- Bilah Kiri Luar -->
+                        <polygon points="52,82 84,82 118,218 86,218" fill="#FFFFFF"/>
+                        <!-- Bilah Kanan Luar -->
+                        <polygon points="348,82 316,82 282,218 314,218" fill="#FFFFFF"/>
+                        <!-- Bilah Kiri Dalam -->
+                        <polygon points="98,98 132,98 152,218 118,218" fill="#FFFFFF"/>
+                        <!-- Bilah Kanan Dalam -->
+                        <polygon points="302,98 268,98 248,218 282,218" fill="#FFFFFF"/>
+                        <!-- Kolom Vertikal Tengah (Tertinggi) -->
+                        <polygon points="154,54 246,54 230,222 170,222" fill="#FFFFFF"/>
+                        <!-- Mangkuk Penyangga Bawah (U-Shape Bar Putih) -->
+                        <path d="M118,218 L142,218 C142,228 156,236 172,236 L228,236 C244,236 258,228 258,218 L282,218 L288,272 L112,272 Z" fill="#FFFFFF"/>
+                        <!-- Segitiga Emas Bawah -->
+                        <polygon points="132,286 268,286 200,354" fill="#F59E0B"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        VosPrint
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 tracking-wider">DIGITAL PRINT</span>
+                    </h1>
+                </div>
+            </div>
 
-                <input type="text" id="item-price-manual" placeholder="Harga Satuan" required
-                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-green-400 font-semibold placeholder-gray-400">
-                       
-                <input type="number" id="item-qty" placeholder="Jumlah" required min="1" value="1"
-                       class="p-3 border border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-gray-800 text-white placeholder-gray-400">
-                
-                <button type="submit" 
-                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full md:col-span-1">
-                        Add Nota
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="toggleStoreSettings()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Profil Toko
                 </button>
-                
-                <button type="button" onclick="clearInputFields()" id="clear-input-button"
-                        class="p-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition duration-150 ease-in-out active:scale-[0.98] col-span-full md:col-span-1">
-                        Clear
+                <button type="button" onclick="createNewInvoicePrompt()" class="px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5">
+                    + Nota Baru
                 </button>
+            </div>
+        </header>
+
+        <!-- PENGATURAN TOKO (COLLAPSIBLE) -->
+        <div id="store-settings-card" class="hidden bg-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-xl transition-all">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Identitas Profil VosPrint
+                </h2>
+                <button onclick="toggleStoreSettings()" class="text-slate-400 hover:text-white text-xs">✕ Tutup</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Toko</label>
+                    <input type="text" id="store-name" value="VosPrint"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-semibold focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Slogan / Keterangan Toko</label>
+                    <input type="text" id="store-tagline" value="Digital Printing & Advertising Solution"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Rekening Transfer Toko</label>
+                    <input type="text" id="store-bank" value="5211483289 A.n Joshua Delfianto"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-amber-400 font-mono text-sm focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Alamat Toko</label>
+                    <input type="text" id="store-address" value="Jl. Percetakan Raya, Jakarta"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">WhatsApp / Telepon Toko</label>
+                    <input type="text" id="store-phone" value="0812-3456-7890"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Ganti Logo Kustom (Opsional)</label>
+                    <input type="file" id="store-logo-file" accept="image/*" onchange="handleCustomLogoUpload(event)"
+                           class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer">
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center pt-2">
+                <button type="button" onclick="resetToDefaultLogo()" class="text-xs text-slate-400 hover:text-amber-400 underline">
+                    Gunakan Logo Bawaan VosPrint
+                </button>
+                <button type="button" onclick="saveStoreSettings()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs sm:text-sm font-bold rounded-lg transition">
+                    Simpan Profil
+                </button>
+            </div>
+        </div>
+
+        <!-- FORM DATA NOTA & PELANGGAN -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <!-- Grid Atas: Info Dokumen & Tanggal -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Jenis Dokumen *</label>
+                    <select id="doc-type" onchange="handleDocTypeChange()" 
+                            class="w-full p-2.5 bg-slate-800 border border-amber-500/40 rounded-lg text-amber-300 font-semibold text-sm focus:border-amber-500 focus:outline-none transition">
+                        <option value="NOTA">Nota Penjualan</option>
+                        <option value="INVOICE" selected>Invoice / Faktur</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="doc-no-label" class="block text-xs font-medium text-slate-400 mb-1.5">Nomor Dokumen</label>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="invoice-no" 
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-mono focus:border-indigo-500 focus:outline-none">
+                        <button type="button" onclick="generateAutoInvoiceNo()" title="Acak / Reset Nomor Dokumen"
+                                class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 flex-shrink-0 transition">
+                            🔄
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Tanggal Terbit</label>
+                    <input type="date" id="invoice-date"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div id="due-date-container">
+                    <label class="block text-xs font-medium text-amber-400/90 mb-1.5">Jatuh Tempo (Due Date)</label>
+                    <input type="date" id="invoice-due-date"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Grid Bawah: Info Pelanggan & Alamat (Lega & Tidak Terhimpit) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-800/80">
+                <div>
+                    <label id="customer-name-label" class="block text-xs font-medium text-slate-400 mb-1.5">Ditagihkan Kepada (Bill To) *</label>
+                    <input type="text" id="customer-name" placeholder="Nama Pelanggan / Perusahaan"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Alamat & Kontak Pelanggan (Opsional)</label>
+                    <input type="text" id="customer-phone" placeholder="No. Telepon / WhatsApp / Alamat pengiriman"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM INPUT ITEM (DENGAN DIMENSI CM & PERHITUNGAN LUAS M²) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-slate-800 pb-3">
+                <h2 id="item-form-title" class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    Input Barang / Jasa Cetak
+                </h2>
+                <label class="text-xs text-slate-400 flex items-center cursor-pointer select-none">
+                    <input type="checkbox" id="toggle-dimension" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 mr-1.5" checked>
+                    Hitung Luas Dimensi (Panjang × Lebar)
+                </label>
+            </div>
+
+            <form id="item-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <div class="sm:col-span-2 md:col-span-2">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nama Barang / Deskripsi *</label>
+                        <input type="text" id="item-name" placeholder="Cth: Spanduk Warung Makan" required 
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jenis Bahan *</label>
+                        <input type="text" id="item-type" placeholder="Pilih/Ketik Jenis" required list="master-types"
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                        <datalist id="master-types"></datalist>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Satuan *</label>
+                        <select id="item-unit" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                            <option value="Cm">Cm</option>
+                            <option value="Pcs">Pcs</option>
+                            <option value="Lembar">Lembar</option>
+                            <option value="Rim">Rim</option>
+                            <option value="Roll">Roll</option>
+                            <option value="Pack">Pack</option>
+                            <option value="Set">Set</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Harga Satuan (Rp) *</label>
+                        <input type="text" id="item-price" placeholder="Rp 0" required
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-emerald-400 font-semibold text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    <div id="dim-p-wrapper">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Panjang (P) cm</label>
+                        <input type="number" step="any" min="0" id="item-dim-p" placeholder="100" value="100"
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+
+                    <div id="dim-l-wrapper">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Lebar (L) cm</label>
+                        <input type="number" step="any" min="0" id="item-dim-l" placeholder="100" value="100"
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jumlah / Qty *</label>
+                        <input type="number" id="item-qty" min="1" value="1" required
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Diskon Item (Rp)</label>
+                        <input type="text" id="item-discount" placeholder="0"
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-amber-400 text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+
+                    <div class="col-span-2 sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Catatan / Finishing (Opsional)</label>
+                        <input type="text" id="item-notes" placeholder="Cth: Mata ayam 4 sudut, selongsong"
+                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <div class="text-xs sm:text-sm text-slate-400">
+                        Subtotal: <span class="font-bold text-emerald-400 text-base" id="preview-val">Rp 0</span>
+                        <span id="dimension-summary" class="ml-2 text-xs text-slate-400 font-mono"></span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="resetItemForm()" 
+                                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm rounded-xl transition">
+                            Reset Form
+                        </button>
+                        <button type="submit" id="submit-item-btn"
+                                class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg transition">
+                            <span id="submit-btn-text">+ Tambahkan ke Nota</span>
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
 
-        <div class="overflow-x-auto shadow-md rounded-lg mb-4">
-            <table class="min-w-full divide-y divide-gray-700">
-                <thead class="bg-gray-700">
-                    <tr>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">No</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-3/12">Barang</th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Jenis</th>
-                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Harga</th>
-                        <th class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Jml</th>
-                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider w-2/12">Subtotal</th>
-                        <th id="aksi-header" class="px-3 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider w-1/12">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="invoice-items" class="bg-gray-800 divide-y divide-gray-700">
-                    <tr id="empty-state">
-                        <td colspan="7" class="px-3 py-4 text-center text-gray-400 italic">Belum ada barang di nota.</td>
-                    </tr>
-                </tbody>
-                <tfoot class="bg-gray-800">
-                    <tr class="grand-total-row">
-                        <td colspan="5" class="px-3 py-4 text-right text-lg font-bold text-gray-100">TOTAL KESELURUHAN:</td> 
-                        <td id="grand-total" class="px-3 py-4 text-right text-2xl font-bold text-green-400" colspan="2">
-                            Rp 0
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
+        <!-- TABEL BARANG NOTA -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-white text-sm sm:text-base">Daftar Barang</h3>
+                    <span id="items-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">0 item</span>
+                </div>
+                <button type="button" onclick="clearAllItems()" id="clear-btn-top"
+                        class="text-xs text-rose-400 hover:text-rose-300 transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    Kosongkan Nota
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-800 text-left text-xs sm:text-sm">
+                    <thead class="bg-slate-800/60 text-slate-400 uppercase tracking-wider font-semibold">
+                        <tr>
+                            <th class="px-3 py-3 text-center w-10">No</th>
+                            <th class="px-3 py-3 min-w-[180px]">Barang & Catatan</th>
+                            <th class="px-3 py-3">Jenis</th>
+                            <th class="px-3 py-3 text-center">Dimensi</th>
+                            <th class="px-3 py-3 text-right">Harga</th>
+                            <th class="px-3 py-3 text-center">Qty / Satuan</th>
+                            <th class="px-3 py-3 text-right">Diskon</th>
+                            <th class="px-3 py-3 text-right font-bold text-slate-200">Subtotal</th>
+                            <th class="px-3 py-3 text-center w-20">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items" class="divide-y divide-slate-800/60 bg-slate-900/40">
+                        <tr id="empty-state">
+                            <td colspan="9" class="px-4 py-10 text-center text-slate-500 italic">
+                                Belum ada barang di nota. Silakan isi form di atas.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- KOTAK REKENING PEMBAYARAN & RINGKASAN FINANSIAL -->
+            <div class="p-4 sm:p-6 bg-slate-950/60 border-t border-slate-800 flex flex-col md:flex-row justify-between items-stretch md:items-end gap-5">
+                
+                <!-- Info Rekening VosPrint -->
+                <div class="w-full md:w-1/2 bg-slate-900 border border-amber-500/30 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                            💳
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase font-semibold text-slate-400 tracking-wider">Rekening Resmi Pembayaran</div>
+                            <div class="text-sm sm:text-base font-bold text-amber-400 font-mono" id="bank-info-display">5211483289 A.n Joshua Delfianto</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="copyBankAccount()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition">
+                        Salin
+                    </button>
+                </div>
+
+                <!-- Perhitungan Finansial -->
+                <div class="w-full md:w-5/12 space-y-2 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                    <div class="flex justify-between items-center text-xs sm:text-sm">
+                        <span class="text-slate-400">Subtotal Kotor:</span>
+                        <span id="subtotal-gross" class="font-semibold text-slate-200">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs sm:text-sm">
+                        <span class="text-slate-400">Diskon Item:</span>
+                        <span id="total-item-discounts" class="text-amber-400 font-semibold">- Rp 0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs sm:text-sm pt-1 border-t border-slate-800">
+                        <span class="text-slate-400">Diskon Nota:</span>
+                        <div class="flex items-center gap-1 w-28">
+                            <span class="text-xs text-slate-400">Rp</span>
+                            <input type="number" id="global-discount" value="0" min="0" oninput="calculateFinancials()"
+                                   class="w-full p-1 bg-slate-800 border border-slate-700 rounded text-right text-xs text-white focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs sm:text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400">PPN:</span>
+                            <select id="tax-percent" onchange="calculateFinancials()" class="text-xs bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 focus:outline-none">
+                                <option value="0">0%</option>
+                                <option value="11">11%</option>
+                                <option value="12">12%</option>
+                            </select>
+                        </div>
+                        <span id="tax-amount" class="text-slate-300 font-semibold">+ Rp 0</span>
+                    </div>
+                    <div class="pt-2 border-t border-emerald-500/40 flex justify-between items-baseline">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">TOTAL AKHIR:</span>
+                        <span id="grand-total" class="text-2xl font-extrabold text-emerald-400">Rp 0</span>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <div id="actions-area" class="flex flex-col sm:flex-row justify-end items-end gap-3 mt-8 pt-4 border-t border-gray-700">
-            <div class="w-full sm:w-60 flex flex-col space-y-2">
-                 <button onclick="saveInvoice()" id="save-button" 
-                        class="p-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition duration-150 ease-in-out active:scale-[0.98] disabled:bg-gray-600 disabled:text-gray-400" disabled>
-                    Simpan Riwayat
-                </button>
-                <button onclick="generatePNG()" id="print-image-button" 
-                        class="p-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-300 transition duration-150 ease-in-out active:scale-[0.98] disabled:bg-gray-600 disabled:text-gray-400" disabled>
-                    Cetak ke PNG
-                </button>
-                <button onclick="clearAllItems()" id="clear-button-bottom" 
-                        class="p-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 transition duration-150 ease-in-out active:scale-[0.98] disabled:bg-gray-600 disabled:text-gray-400" disabled>
-                    Bersihkan Nota
-                </button>
-            </div>
-        </div>
-        
-        <div id="history-area" class="mt-8">
-            <div id="history-header" class="history-header p-4 bg-gray-700 rounded-t-lg flex justify-between items-center border border-gray-600">
-                <h2 class="text-xl font-semibold text-gray-100">Riwayat Transaksi (Penyimpanan Lokal)</h2>
-                <span id="history-toggle-icon">▼</span>
-            </div>
-            <div id="history-content" class="border border-t-0 border-gray-700 rounded-b-lg p-4 max-h-96 overflow-y-auto">
-                <div id="invoices-list" class="space-y-4"></div>
-            </div>
+        <!-- TOMBOL AKSI UTAMA -->
+        <div class="flex flex-wrap items-center justify-end gap-2.5 p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
+            <button type="button" onclick="clearAllItems()" id="clear-button-bottom"
+                    class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-medium rounded-xl transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                Bersihkan Nota
+            </button>
+            <button type="button" onclick="saveInvoice()" id="save-button" 
+                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                Simpan Riwayat
+            </button>
+            <button type="button" onclick="printInvoiceBrowser()" id="print-browser-button"
+                    class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                Cetak / PDF
+            </button>
+            <button type="button" onclick="generatePNG()" id="print-image-button" 
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5" disabled>
+                Ekspor Gambar PNG
+            </button>
         </div>
 
-        <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden items-center justify-center z-50">
-            <div class="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-100 ease-out border border-gray-700">
-                <h3 id="modal-title" class="text-xl font-bold mb-4 text-gray-100"></h3>
-                <p id="modal-message" class="mb-6 text-gray-300"></p>
-                <div id="modal-actions" class="flex justify-end space-x-3"></div>
+        <!-- RIWAYAT TRANSAKSI -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div id="history-header" class="p-4 bg-slate-850 hover:bg-slate-800/80 cursor-pointer flex justify-between items-center transition select-none">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">⏱️</span>
+                    <h3 class="font-bold text-white text-sm sm:text-base">Riwayat Transaksi Tersimpan</h3>
+                    <span id="history-counter-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">0 Nota</span>
+                </div>
+                <span id="history-toggle-icon" class="text-slate-400 text-sm">▼</span>
+            </div>
+
+            <div id="history-content" class="p-4 border-t border-slate-800 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800 text-xs">
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportHistoryJSON()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">
+                            Backup (JSON)
+                        </button>
+                        <label class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 cursor-pointer">
+                            Restore (JSON)
+                            <input type="file" id="import-json-file" class="hidden" accept=".json" onchange="importHistoryJSON(event)">
+                        </label>
+                    </div>
+                    <button onclick="clearEntireHistory()" class="text-rose-400 hover:text-rose-300">
+                        Hapus Seluruh Riwayat
+                    </button>
+                </div>
+
+                <div id="invoices-list" class="space-y-2.5"></div>
             </div>
         </div>
 
     </div>
 
-    <!-- ELEMEN KHUSUS DOKUMEN CETAK (MENGHINDARI BUG CLIPPING IPAD) -->
+    <!-- MODAL CUSTOM POPUP -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 id="modal-title" class="text-base font-bold mb-2 text-white"></h3>
+            <p id="modal-message" class="text-xs sm:text-sm text-slate-300 mb-5 leading-relaxed"></p>
+            <div id="modal-actions" class="flex justify-end gap-2"></div>
+        </div>
+    </div>
+
+    <!-- ELEMEN RENDERING OFF-SCREEN UNTUK EKSPOR GAMBAR PNG -->
     <div id="print-render-area"></div>
 
-    <script type="module">
-        // --- MASTER DATA ---
+    <script>
+        // --- MASTER DATA BARANG PERCETAKAN ---
         const masterBarang = [
-            { name: "Ac1", price: 4000, type: "Ac260" }, 
-            { name: "Ap1", price: 4000, type: "Ap150" },
-            { name: "Al1", price: 66000, type: "Albatros" }, 
-            { name: "Ac1BB", price: 8000, type: "Ac260BB" },
-            { name: "Ap1BB", price: 8000, type: "Ap150BB" },
-            { name: "SpBa", price: 65000, type: "Backlite" },
-            { name: "SpDoffGlossy", price: 40000, type: "Doff/Glossy" },
-            { name: "Sp340", price: 24000, type: "340Hr" },
-            { name: "Sp28", price: 20000, type: "280Hr" }
+            { name: "Spanduk Flexi 280gr", price: 20, type: "280Hr", unit: "Cm" },
+            { name: "Spanduk Flexi 340gr (High Res)", price: 25, type: "340Hr", unit: "Cm" },
+            { name: "Stiker Vinyl Glossy / Doff", price: 50, type: "Vinyl", unit: "Cm" },
+            { name: "Stiker Albatros + Laminasi", price: 70, type: "Albatros", unit: "Cm" },
+            { name: "Banner Backlite (Neonbox)", price: 65, type: "Backlite", unit: "Cm" },
+            { name: "Brosur Art Paper 150gr (A4)", price: 2500, type: "Ap150", unit: "Lembar" },
+            { name: "Kartu Nama Art Carton 260gr", price: 35000, type: "Ac260", unit: "Pack" },
+            { name: "Cetak Bolak-Balik Ac260 BB", price: 6000, type: "Ac260BB", unit: "Lembar" },
+            { name: "X-Banner Stand 60x160", price: 85000, type: "Display", unit: "Set" },
+            { name: "Roll Up Banner 80x200", price: 220000, type: "Display", unit: "Set" }
         ];
 
-        function getAveragePriceByType(type) {
-            if (!type) return 0;
-            const filteredItems = masterBarang.filter(barang => barang.type.toLowerCase() === type.toLowerCase());
-            if (filteredItems.length === 0) return 0;
+        const STORAGE_KEY = 'vosprint_offline_invoice_history';
+        const STORE_KEY = 'vosprint_store_settings';
 
-            const total = filteredItems.reduce((sum, item) => sum + item.price, 0);
-            const average = total / filteredItems.length;
-            return Math.round(average / 100) * 100;
-        }
-
-        const STORAGE_KEY = 'offline_invoice_history';
+        // SVG Logo Resmi VosPrint yang presisi
+        const DEFAULT_VOSPRINT_SVG = `
+            <svg viewBox="0 0 400 400" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="400" height="400" fill="#000000"/>
+                <polygon points="52,82 84,82 118,218 86,218" fill="#FFFFFF"/>
+                <polygon points="348,82 316,82 282,218 314,218" fill="#FFFFFF"/>
+                <polygon points="98,98 132,98 152,218 118,218" fill="#FFFFFF"/>
+                <polygon points="302,98 268,98 248,218 282,218" fill="#FFFFFF"/>
+                <polygon points="154,54 246,54 230,222 170,222" fill="#FFFFFF"/>
+                <path d="M118,218 L142,218 C142,228 156,236 172,236 L228,236 C244,236 258,228 258,218 L282,218 L288,272 L112,272 Z" fill="#FFFFFF"/>
+                <polygon points="132,286 268,286 200,354" fill="#F59E0B"/>
+            </svg>
+        `;
 
         let items = [];
-        let customerName = '';
+        let editingIndex = -1;
+        let storeInfo = {
+            name: "VosPrint",
+            tagline: "Digital Printing & Advertising Solution",
+            address: "Jl. Percetakan Raya, Jakarta",
+            phone: "0812-3456-7890",
+            bank: "5211483289 A.n Joshua Delfianto",
+            logoUrl: ""
+        };
 
-        // DOM References
-        const customerNameInput = document.getElementById('customer-name');
+        // DOM Referensi
+        const docTypeSelect = document.getElementById('doc-type');
+        const docNoLabel = document.getElementById('doc-no-label');
+        const customerNameLabel = document.getElementById('customer-name-label');
+        const dueDateContainer = document.getElementById('due-date-container');
+        const invoiceDueDateInput = document.getElementById('invoice-due-date');
+
         const itemForm = document.getElementById('item-form');
+        const itemFormTitle = document.getElementById('item-form-title');
+        const submitItemBtn = document.getElementById('submit-item-btn');
+        const submitBtnText = document.getElementById('submit-btn-text');
         const itemsContainer = document.getElementById('invoice-items');
-        const grandTotalElement = document.getElementById('grand-total'); 
         const emptyState = document.getElementById('empty-state');
-        const saveButton = document.getElementById('save-button');
-        const clearButton = document.getElementById('clear-button-bottom');
-        const printImageButton = document.getElementById('print-image-button'); 
-        const historyHeader = document.getElementById('history-header');
-        const historyContent = document.getElementById('history-content');
-        const historyToggleIcon = document.getElementById('history-toggle-icon');
-        const invoicesList = document.getElementById('invoices-list');
+        const itemsBadge = document.getElementById('items-badge');
 
-        const itemNameInput = document.getElementById('item-name-manual');
-        const itemTypeInput = document.getElementById('item-type-input');
-        const itemPriceManual = document.getElementById('item-price-manual');
+        const invoiceNoInput = document.getElementById('invoice-no');
+        const invoiceDateInput = document.getElementById('invoice-date');
+        const customerNameInput = document.getElementById('customer-name');
+        const customerPhoneInput = document.getElementById('customer-phone');
+        
+        const itemNameInput = document.getElementById('item-name');
+        const itemTypeInput = document.getElementById('item-type');
+        const itemUnitInput = document.getElementById('item-unit');
+        const itemPriceInput = document.getElementById('item-price');
+        const itemDimPInput = document.getElementById('item-dim-p');
+        const itemDimLInput = document.getElementById('item-dim-l');
         const itemQtyInput = document.getElementById('item-qty');
+        const itemDiscountInput = document.getElementById('item-discount');
+        const itemNotesInput = document.getElementById('item-notes');
+        const toggleDimensionCheckbox = document.getElementById('toggle-dimension');
         const datalistTypes = document.getElementById('master-types');
 
+        // Financial Elements
+        const subtotalGrossElem = document.getElementById('subtotal-gross');
+        const totalItemDiscountsElem = document.getElementById('total-item-discounts');
+        const globalDiscountInput = document.getElementById('global-discount');
+        const taxPercentSelect = document.getElementById('tax-percent');
+        const taxAmountElem = document.getElementById('tax-amount');
+        const grandTotalElem = document.getElementById('grand-total');
+
+        // Action Buttons
+        const clearBtnTop = document.getElementById('clear-btn-top');
+        const clearButtonBottom = document.getElementById('clear-button-bottom');
+        const saveButton = document.getElementById('save-button');
+        const printBrowserButton = document.getElementById('print-browser-button');
+        const printImageButton = document.getElementById('print-image-button');
+
+        // Modal Elements
         const customModal = document.getElementById('custom-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalMessage = document.getElementById('modal-message');
         const modalActions = document.getElementById('modal-actions');
+
+        // History Elements
+        const historyHeader = document.getElementById('history-header');
+        const historyContent = document.getElementById('history-content');
+        const historyBadge = document.getElementById('history-counter-badge');
+        const historyToggleIcon = document.getElementById('history-toggle-icon');
+        const invoicesList = document.getElementById('invoices-list');
 
         function showCustomModal(title, message, buttons) {
             modalTitle.textContent = title;
@@ -217,14 +582,58 @@
                     hideCustomModal();
                     if (btn.action) btn.action();
                 };
-                if (!btn.class.includes('px-4')) {
-                     buttonElement.className += " px-4 py-2 rounded-lg font-medium transition duration-150";
-                }
                 modalActions.appendChild(buttonElement);
             });
 
             customModal.classList.remove('hidden');
             customModal.classList.add('flex');
+        }
+
+        function getDocTypeConfig(type) {
+            switch(type) {
+                case 'INVOICE':
+                    return { title: 'INVOICE', prefix: 'INV', label: 'Nomor Invoice', billLabel: 'Ditagihkan Kepada (Bill To)', showDueDate: true };
+                case 'NOTA':
+                default:
+                    return { title: 'NOTA PENJUALAN', prefix: 'NOTA', label: 'Nomor Nota', billLabel: 'Nama Pelanggan', showDueDate: false };
+            }
+        }
+
+        function handleDocTypeChange(keepExistingNumber = false) {
+            const config = getDocTypeConfig(docTypeSelect.value);
+            docNoLabel.textContent = config.label;
+            customerNameLabel.textContent = config.billLabel + ' *';
+            customerNameInput.placeholder = config.billLabel;
+
+            if (config.showDueDate) {
+                dueDateContainer.style.display = 'block';
+            } else {
+                dueDateContainer.style.display = 'none';
+            }
+
+            if (!keepExistingNumber) {
+                generateAutoInvoiceNo();
+            }
+        }
+
+        function generateAutoInvoiceNo() {
+            const config = getDocTypeConfig(docTypeSelect ? docTypeSelect.value : 'INVOICE');
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            invoiceNoInput.value = `${config.prefix}-${y}${m}${d}-${rand}`;
+        }
+
+        function setDefaultDate() {
+            const now = new Date();
+            invoiceDateInput.value = now.toISOString().slice(0, 10);
+            
+            // Default Due Date: +7 hari
+            const due = new Date();
+            due.setDate(now.getDate() + 7);
+            invoiceDueDateInput.value = due.toISOString().slice(0, 10);
         }
 
         function hideCustomModal() {
@@ -237,407 +646,610 @@
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
-                minimumFractionDigits: 0
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
             }).format(num);
         }
-        
-        function formatTimestamp(dateString) {
-            if (!dateString) return 'Tanggal tidak diketahui';
-            return new Date(dateString).toLocaleString('id-ID', {
-                 dateStyle: 'medium',
-                 timeStyle: 'short'
-            });
-        }
-        
-        function getUniqueTypes() {
-            const types = masterBarang.map(item => item.type);
-            return [...new Set(types)];
+
+        function cleanNumber(val) {
+            if (!val) return 0;
+            return parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
         }
 
-        function populateDatalistTypes() {
-            datalistTypes.innerHTML = '';
-            const uniqueTypes = getUniqueTypes();
-            uniqueTypes.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type;
-                datalistTypes.appendChild(option);
+        function formatDateIndonesia(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
             });
+        }
+
+        // Pengaturan Toko
+        function toggleStoreSettings() {
+            document.getElementById('store-settings-card').classList.toggle('hidden');
+        }
+
+        function handleCustomLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                storeInfo.logoUrl = e.target.result;
+                updateLogoPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetToDefaultLogo() {
+            storeInfo.logoUrl = "";
+            const fileInput = document.getElementById('store-logo-file');
+            if (fileInput) fileInput.value = "";
+            updateLogoPreview();
+            saveStoreSettings();
+        }
+
+        function updateLogoPreview() {
+            const previewContainer = document.getElementById('brand-logo-preview');
+            if (!previewContainer) return;
+            if (storeInfo.logoUrl) {
+                previewContainer.innerHTML = `<img src="${storeInfo.logoUrl}" alt="Logo Toko" class="w-full h-full object-contain">`;
+            } else {
+                previewContainer.innerHTML = DEFAULT_VOSPRINT_SVG;
+            }
+        }
+
+        function copyBankAccount() {
+            const bankText = storeInfo.bank || "5211483289 A.n Joshua Delfianto";
+            const temp = document.createElement("input");
+            temp.value = bankText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+
+            showCustomModal("Tersalin", `Nomor rekening "${bankText}" berhasil disalin ke clipboard.`, [
+                { text: "Oke", class: "px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs" }
+            ]);
+        }
+
+        function loadStoreSettings() {
+            const stored = localStorage.getItem(STORE_KEY);
+            if (stored) {
+                try { storeInfo = { ...storeInfo, ...JSON.parse(stored) }; } catch(e){}
+            }
+            document.getElementById('store-name').value = storeInfo.name || 'VosPrint';
+            document.getElementById('store-tagline').value = storeInfo.tagline || '';
+            document.getElementById('store-address').value = storeInfo.address || '';
+            document.getElementById('store-phone').value = storeInfo.phone || '';
+            document.getElementById('store-bank').value = storeInfo.bank || '5211483289 A.n Joshua Delfianto';
+            
+            const bankDisplay = document.getElementById('bank-info-display');
+            if (bankDisplay) bankDisplay.textContent = storeInfo.bank || '5211483289 A.n Joshua Delfianto';
+
+            updateLogoPreview();
+        }
+
+        function saveStoreSettings() {
+            storeInfo = {
+                name: document.getElementById('store-name').value.trim() || 'VosPrint',
+                tagline: document.getElementById('store-tagline').value.trim(),
+                address: document.getElementById('store-address').value.trim(),
+                phone: document.getElementById('store-phone').value.trim(),
+                bank: document.getElementById('store-bank').value.trim() || '5211483289 A.n Joshua Delfianto',
+                logoUrl: storeInfo.logoUrl || ''
+            };
+            localStorage.setItem(STORE_KEY, JSON.stringify(storeInfo));
+
+            const bankDisplay = document.getElementById('bank-info-display');
+            if (bankDisplay) bankDisplay.textContent = storeInfo.bank;
+
+            updateLogoPreview();
+            toggleStoreSettings();
+            showCustomModal("Tersimpan", "Profil toko berhasil disimpan.", [
+                { text: "Oke", class: "px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs" }
+            ]);
+        }
+
+        function populateMasterDatalist() {
+            datalistTypes.innerHTML = '';
+            const types = [...new Set(masterBarang.map(b => b.type))];
+            types.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                datalistTypes.appendChild(opt);
+            });
+        }
+
+        // Kalkulasi Item (Dimensi dalam cm)
+        function calculateSingleItem(item) {
+            const p = Number(item.p) || 0;
+            const l = Number(item.l) || 0;
+            const qty = Number(item.qty) || 1;
+            const price = Number(item.price) || 0;
+            const discount = Number(item.discount) || 0;
+
+            let unitsCount = qty;
+            let areaCm = 0;
+            if (item.hasDimension) {
+                // Perhitungan luas cm (P cm × L cm)
+                areaCm = Math.round(p * l);
+                unitsCount = areaCm * qty;
+            }
+
+            const gross = unitsCount * price;
+            const totalDiscount = discount * qty;
+            const subtotal = Math.max(0, gross - totalDiscount);
+
+            return { unitsCount, areaCm, gross, totalDiscount, subtotal };
+        }
+
+        function updateFormPreview() {
+            const p = parseFloat(itemDimPInput.value) || 0;
+            const l = parseFloat(itemDimLInput.value) || 0;
+            const qty = parseInt(itemQtyInput.value) || 1;
+            const price = cleanNumber(itemPriceInput.value);
+            const discount = cleanNumber(itemDiscountInput.value);
+            const hasDim = toggleDimensionCheckbox.checked;
+
+            let units = qty;
+            let summaryText = "";
+            if (hasDim) {
+                const area = Math.round(p * l);
+                units = area * qty;
+                summaryText = `(${p}×${l} cm = ${area} cm × ${qty} pcs = ${units} cm)`;
+            } else {
+                summaryText = `(${qty} ${itemUnitInput.value})`;
+            }
+
+            const gross = units * price;
+            const totalDisc = discount * qty;
+            const subtotal = Math.max(0, gross - totalDisc);
+
+            document.getElementById('preview-val').textContent = formatRupiah(subtotal);
+            document.getElementById('dimension-summary').textContent = summaryText;
         }
 
         itemTypeInput.addEventListener('input', function() {
-            const selectedType = this.value.trim();
-            const averagePrice = getAveragePriceByType(selectedType); 
-
-            if (averagePrice > 0) {
-                const currentPriceValue = itemPriceManual.value.replace(/[^0-9]/g, '');
-                if (currentPriceValue === '' || currentPriceValue === '0') {
-                     itemPriceManual.value = formatRupiah(averagePrice); 
-                }
+            const selected = this.value.trim().toLowerCase();
+            const matched = masterBarang.find(b => b.type.toLowerCase() === selected);
+            if (matched) {
+                if (!itemNameInput.value) itemNameInput.value = matched.name;
+                if (!cleanNumber(itemPriceInput.value)) itemPriceInput.value = formatRupiah(matched.price);
+                if (matched.unit) itemUnitInput.value = matched.unit;
             }
+            updateFormPreview();
         });
-        
-        itemPriceManual.addEventListener('blur', function() {
-            const value = this.value.replace(/[^0-9]/g, ''); 
-            if (value) {
-                this.value = formatRupiah(value); 
+
+        itemPriceInput.addEventListener('blur', function() {
+            const num = cleanNumber(this.value);
+            this.value = num > 0 ? formatRupiah(num) : '';
+            updateFormPreview();
+        });
+        itemPriceInput.addEventListener('focus', function() {
+            const num = cleanNumber(this.value);
+            this.value = num > 0 ? num : '';
+        });
+
+        itemDiscountInput.addEventListener('blur', function() {
+            const num = cleanNumber(this.value);
+            this.value = num > 0 ? formatRupiah(num) : '';
+            updateFormPreview();
+        });
+        itemDiscountInput.addEventListener('focus', function() {
+            const num = cleanNumber(this.value);
+            this.value = num > 0 ? num : '';
+        });
+
+        [itemDimPInput, itemDimLInput, itemQtyInput, itemUnitInput].forEach(elem => {
+            elem.addEventListener('input', updateFormPreview);
+        });
+
+        toggleDimensionCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.getElementById('dim-p-wrapper').style.opacity = isChecked ? '1' : '0.4';
+            document.getElementById('dim-l-wrapper').style.opacity = isChecked ? '1' : '0.4';
+            itemDimPInput.disabled = !isChecked;
+            itemDimLInput.disabled = !isChecked;
+            if (!isChecked) {
+                itemDimPInput.value = '';
+                itemDimLInput.value = '';
+            } else if (!itemDimPInput.value) {
+                itemDimPInput.value = '100';
+                itemDimLInput.value = '100';
+            }
+            updateFormPreview();
+        });
+
+        itemForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = itemNameInput.value.trim();
+            const type = itemTypeInput.value.trim();
+            const unit = itemUnitInput.value;
+            const price = cleanNumber(itemPriceInput.value);
+            const qty = parseInt(itemQtyInput.value) || 1;
+            const hasDimension = toggleDimensionCheckbox.checked;
+            const p = hasDimension ? (parseFloat(itemDimPInput.value) || 0) : 0;
+            const l = hasDimension ? (parseFloat(itemDimLInput.value) || 0) : 0;
+            const discount = cleanNumber(itemDiscountInput.value);
+            const notes = itemNotesInput.value.trim();
+
+            if (!name || price <= 0 || qty <= 0) {
+                showCustomModal("Input Tidak Valid", "Pastikan Nama Barang, Harga Satuan (> 0), dan Qty (> 0) terisi.", [
+                    { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs" }
+                ]);
+                return;
+            }
+
+            const itemObj = { name, type, unit, price, qty, hasDimension, p, l, discount, notes };
+
+            if (editingIndex >= 0) {
+                items[editingIndex] = itemObj;
+                editingIndex = -1;
+                itemFormTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Input Barang / Jasa Cetak`;
+                submitBtnText.textContent = "+ Tambahkan ke Nota";
             } else {
-                 this.value = '';
+                items.push(itemObj);
             }
-        });
-        
-        itemPriceManual.addEventListener('focus', function() {
-            const value = this.value.replace(/[^0-9]/g, ''); 
-            this.value = value;
+
+            renderItems();
+            resetItemForm();
         });
 
-        customerNameInput.addEventListener('input', () => {
-            customerName = customerNameInput.value.trim();
-        });
-
-        window.calculateTotal = function() {
-            const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            grandTotalElement.textContent = formatRupiah(grandTotal); 
-            
-            const isDisabled = items.length === 0;
-            clearButton.disabled = isDisabled;
-            saveButton.disabled = isDisabled;
-            printImageButton.disabled = isDisabled; 
-        }
-
-        window.clearInputFields = function() {
+        function resetItemForm() {
+            editingIndex = -1;
             itemNameInput.value = '';
-            itemTypeInput.value = ''; 
-            itemPriceManual.value = ''; 
+            itemTypeInput.value = '';
+            itemUnitInput.value = 'Cm';
+            itemPriceInput.value = '';
+            itemDimPInput.value = '100';
+            itemDimLInput.value = '100';
             itemQtyInput.value = '1';
+            itemDiscountInput.value = '';
+            itemNotesInput.value = '';
+            itemFormTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Input Barang / Jasa Cetak`;
+            submitBtnText.textContent = "+ Tambahkan ke Nota";
+            updateFormPreview();
             itemNameInput.focus();
-        };
+        }
 
         function renderItems() {
             Array.from(itemsContainer.children).forEach(child => {
                 if (child.id !== 'empty-state') child.remove();
             });
 
-            if (items.length === 0) {
-                if (itemsContainer.children.length === 0 || itemsContainer.children[0].id !== 'empty-state') {
-                    itemsContainer.appendChild(emptyState);
-                }
+            const hasItems = items.length > 0;
+            itemsBadge.textContent = `${items.length} item`;
+
+            if (!hasItems) {
+                if (emptyState.parentNode !== itemsContainer) itemsContainer.appendChild(emptyState);
+                emptyState.style.display = 'table-row';
             } else {
-                if (emptyState.parentNode) emptyState.remove();
-                
+                emptyState.style.display = 'none';
+
                 items.forEach((item, index) => {
-                    const subtotal = item.price * item.qty;
+                    const calc = calculateSingleItem(item);
                     const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-700 transition duration-150';
+                    row.className = 'hover:bg-slate-800/50 transition duration-150 border-b border-slate-800/80';
+
+                    const dimLabel = item.hasDimension ? `${item.p}×${item.l} cm` : '-';
+                    const qtyLabel = item.hasDimension ? `${calc.unitsCount} cm (${item.qty} pcs)` : `${item.qty} ${item.unit}`;
+                    const discountLabel = calc.totalDiscount > 0 ? `-${formatRupiah(calc.totalDiscount)}` : '-';
+
                     row.innerHTML = `
-                        <td class="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-50">${index + 1}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.name}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300">${item.type || 'N/A'}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-right">${formatRupiah(item.price)}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-300 text-center">${item.qty}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-base font-semibold text-right text-white">${formatRupiah(subtotal)}</td>
-                        <td class="px-3 py-3 whitespace-nowrap text-center aksi-cell">
-                            <button onclick="removeItem(${index})" 
-                                    class="text-red-400 hover:text-red-500 transition duration-150 rounded-full p-1 hover:bg-gray-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.325 6.42a48.568 48.568 0 0 1-1.021-.166m15.86 0h.002a2.25 2.25 0 0 0-2.244-2.077H8.084a2.25 2.25 0 0 0-2.244 2.077m0 0a2.25 2.25 0 1 0 0 4.5h1.5l.346-9m-4.788 0h.002z" />
-                                </svg>
-                            </button>
+                        <td class="px-3 py-3 text-center text-xs font-semibold text-slate-400">${index + 1}</td>
+                        <td class="px-3 py-3">
+                            <div class="font-medium text-white">${item.name}</div>
+                            ${item.notes ? `<div class="text-[11px] text-amber-400 mt-0.5">📌 ${item.notes}</div>` : ''}
+                        </td>
+                        <td class="px-3 py-3 text-xs text-slate-300">
+                            <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">${item.type || '-'}</span>
+                        </td>
+                        <td class="px-3 py-3 text-center text-xs text-slate-300 font-mono">${dimLabel}</td>
+                        <td class="px-3 py-3 text-right text-xs text-slate-300">${formatRupiah(item.price)}</td>
+                        <td class="px-3 py-3 text-center text-xs text-slate-200">${qtyLabel}</td>
+                        <td class="px-3 py-3 text-right text-xs text-amber-400">${discountLabel}</td>
+                        <td class="px-3 py-3 text-right text-sm font-bold text-emerald-400">${formatRupiah(calc.subtotal)}</td>
+                        <td class="px-3 py-3 text-center">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button type="button" onclick="editItem(${index})" title="Edit Item" 
+                                        class="p-1 text-indigo-400 hover:text-white rounded transition">
+                                    ✏️
+                                </button>
+                                <button type="button" onclick="deleteItemPrompt(${index})" title="Hapus Item"
+                                        class="p-1 text-rose-400 hover:text-white rounded transition">
+                                    🗑️
+                                </button>
+                            </div>
                         </td>
                     `;
                     itemsContainer.appendChild(row);
                 });
             }
 
-            calculateTotal(); 
+            calculateFinancials();
         }
 
-        itemForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const name = itemNameInput.value.trim();
-            const type = itemTypeInput.value.trim();
-            const qty = parseInt(itemQtyInput.value);
-            const priceString = itemPriceManual.value.replace(/[^0-9]/g, '');
-            const price = parseInt(priceString);
+        window.editItem = function(index) {
+            const it = items[index];
+            if (!it) return;
 
-            if (name && type && price > 0 && qty > 0) {
-                items.push({ name, price, qty, type });
-                renderItems();
+            editingIndex = index;
+            itemNameInput.value = it.name;
+            itemTypeInput.value = it.type;
+            itemUnitInput.value = it.unit || 'Cm';
+            itemPriceInput.value = formatRupiah(it.price);
+            toggleDimensionCheckbox.checked = it.hasDimension;
+            itemDimPInput.value = it.p;
+            itemDimLInput.value = it.l;
+            itemQtyInput.value = it.qty;
+            itemDiscountInput.value = it.discount ? formatRupiah(it.discount) : '';
+            itemNotesInput.value = it.notes || '';
 
-                itemNameInput.value = '';
-                itemTypeInput.value = ''; 
-                itemPriceManual.value = ''; 
-                itemQtyInput.value = '1';
-                itemNameInput.focus();
-            } else {
-                 showCustomModal(
-                    "Input Tidak Valid",
-                    "Pastikan Nama Barang, Jenis Barang, Harga Satuan (> Rp0), dan Jumlah (> 0) terisi dengan benar.",
-                    [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]
-                );
-            }
-        });
+            toggleDimensionCheckbox.dispatchEvent(new Event('change'));
+            updateFormPreview();
 
-        window.removeItem = function(index) {
-            showCustomModal(
-                "Konfirmasi Hapus",
-                `Yakin ingin menghapus item ke-${index + 1} (${items[index].name}) dari nota?`,
-                [
-                    { text: "Batal", class: "border border-gray-600 text-gray-300 hover:bg-gray-700" },
-                    { text: "Hapus", class: "bg-red-600 text-white hover:bg-red-700", action: () => { items.splice(index, 1); renderItems(); } }
-                ]
-            );
-        };
-        
-        window.clearAllItems = function() {
-             if (items.length === 0) return;
-             showCustomModal(
-                "Konfirmasi Bersihkan Nota",
-                "Semua item saat ini akan dihapus. Lanjutkan?",
-                [
-                    { text: "Batal", class: "border border-gray-600 text-gray-300 hover:bg-gray-700" },
-                    { text: "Ya, Bersihkan", class: "bg-red-600 text-white hover:bg-red-700", action: () => {
-                        items = [];
-                        customerNameInput.value = '';
-                        customerName = '';
-                        renderItems();
-                    }}
-                ]
-            );
+            itemFormTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Edit Item: ${it.name}`;
+            submitBtnText.textContent = "Simpan Perubahan";
+            itemForm.scrollIntoView({ behavior: 'smooth' });
         };
 
-        window.saveInvoice = function() {
-            if (items.length === 0) {
-                showCustomModal("Gagal Menyimpan", "Nota kosong, tidak ada yang bisa disimpan.", [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
-                return;
-            }
-
-            showCustomModal("Konfirmasi Simpan", "Anda yakin ingin menyimpan nota ini ke riwayat lokal?", [
-                { text: "Batal", class: "border border-gray-600 text-gray-300 hover:bg-gray-700" },
-                {
-                    text: "Ya, Simpan",
-                    class: "bg-green-600 text-white hover:bg-green-700",
+        window.deleteItemPrompt = function(index) {
+            const it = items[index];
+            showCustomModal("Hapus Item", `Hapus "${it.name}" dari nota ini?`, [
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { 
+                    text: "Hapus", 
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
                     action: () => {
-                        try {
-                            const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                            const invoiceData = {
-                                id: Date.now().toString(),
-                                customerName: customerNameInput.value.trim() || 'Pelanggan Umum',
-                                items: JSON.parse(JSON.stringify(items)),
-                                grandTotal: grandTotal,
-                                timestamp: new Date().toISOString(),
-                            };
-
-                            const storedInvoicesJson = localStorage.getItem(STORAGE_KEY);
-                            let invoices = storedInvoicesJson ? JSON.parse(storedInvoicesJson) : [];
-                            
-                            invoices.unshift(invoiceData);
-                            localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
-                            
-                            items = [];
-                            customerNameInput.value = '';
-                            customerName = '';
-                            renderItems();
-                            loadHistory();
-
-                            showCustomModal("Berhasil!", "Nota telah disimpan ke penyimpanan lokal Anda.", [{ text: "Tutup", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
-                        } catch (e) {
-                            console.error("Error saving to localStorage: ", e);
-                            showCustomModal("Error", "Gagal menyimpan nota ke penyimpanan lokal.", [{ text: "Tutup", class: "bg-red-600 text-white hover:bg-red-700" }]);
-                        }
+                        items.splice(index, 1);
+                        if (editingIndex === index) resetItemForm();
+                        renderItems();
                     }
                 }
             ]);
         };
 
-        function renderHistoryDetail(invoice) {
-            let detailHtml = `<p class="font-bold text-gray-300">Pelanggan: ${invoice.customerName || 'Tidak Tercatat'}</p>`;
-            detailHtml += `<ul class="list-disc list-inside space-y-1 text-sm text-gray-400 mt-2 hidden">`;
-            invoice.items.forEach(item => {
-                detailHtml += `<li>${item.name} (${item.type || 'N/A'}) - ${item.qty} x ${formatRupiah(item.price)} = ${formatRupiah(item.price * item.qty)}</li>`;
+        window.clearAllItems = function() {
+            if (items.length === 0) return;
+            showCustomModal("Bersihkan Nota", "Seluruh item pada nota ini akan dihapus. Lanjutkan?", [
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { 
+                    text: "Bersihkan", 
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
+                    action: () => {
+                        items = [];
+                        resetItemForm();
+                        renderItems();
+                    }
+                }
+            ]);
+        };
+
+        function calculateFinancials() {
+            let grossTotal = 0;
+            let itemDiscountsTotal = 0;
+
+            items.forEach(it => {
+                const c = calculateSingleItem(it);
+                grossTotal += c.gross;
+                itemDiscountsTotal += c.totalDiscount;
             });
-            detailHtml += `</ul>`;
-            return detailHtml;
+
+            const netSubtotal = Math.max(0, grossTotal - itemDiscountsTotal);
+            const globalDiscount = cleanNumber(globalDiscountInput.value);
+            const afterGlobalDiscount = Math.max(0, netSubtotal - globalDiscount);
+
+            const taxRate = parseFloat(taxPercentSelect.value) || 0;
+            const taxAmount = Math.round((afterGlobalDiscount * taxRate) / 100);
+            const grandTotal = afterGlobalDiscount + taxAmount;
+
+            subtotalGrossElem.textContent = formatRupiah(grossTotal);
+            totalItemDiscountsElem.textContent = itemDiscountsTotal > 0 ? `- ${formatRupiah(itemDiscountsTotal)}` : '- Rp 0';
+            taxAmountElem.textContent = taxAmount > 0 ? `+ ${formatRupiah(taxAmount)}` : '+ Rp 0';
+            grandTotalElem.textContent = formatRupiah(grandTotal);
+
+            const hasItems = items.length > 0;
+            saveButton.disabled = !hasItems;
+            clearButtonBottom.disabled = !hasItems;
+            clearBtnTop.disabled = !hasItems;
+            printBrowserButton.disabled = !hasItems;
+            printImageButton.disabled = !hasItems;
+
+            return { grossTotal, itemDiscountsTotal, netSubtotal, globalDiscount, taxRate, taxAmount, grandTotal };
+        }
+
+        function createNewInvoicePrompt() {
+            if (items.length > 0) {
+                showCustomModal("Buat Nota Baru", "Buka lembar baru? Item aktif saat ini akan dikosongkan.", [
+                    { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                    { 
+                        text: "Buat Baru", 
+                        class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold",
+                        action: () => initFreshInvoice()
+                    }
+                ]);
+            } else {
+                initFreshInvoice();
+            }
+        }
+
+        function initFreshInvoice() {
+            items = [];
+            customerNameInput.value = '';
+            customerPhoneInput.value = '';
+            globalDiscountInput.value = 0;
+            taxPercentSelect.value = '0';
+            docTypeSelect.value = 'INVOICE';
+            handleDocTypeChange();
+            setDefaultDate();
+            resetItemForm();
+            renderItems();
+        }
+
+        function saveInvoice() {
+            if (items.length === 0) return;
+            const fin = calculateFinancials();
+            const invoiceData = {
+                id: Date.now().toString(),
+                docType: docTypeSelect.value || 'INVOICE',
+                invoiceNo: invoiceNoInput.value.trim() || `INV-${Date.now()}`,
+                invoiceDate: invoiceDateInput.value || new Date().toISOString().slice(0, 10),
+                dueDate: invoiceDueDateInput.value || '',
+                customerName: customerNameInput.value.trim() || 'Pelanggan Umum',
+                customerPhone: customerPhoneInput.value.trim() || '-',
+                items: JSON.parse(JSON.stringify(items)),
+                financials: fin,
+                storeInfo: { ...storeInfo },
+                savedAt: new Date().toISOString()
+            };
+
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                let list = stored ? JSON.parse(stored) : [];
+                list.unshift(invoiceData);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                loadHistory();
+
+                const docConfig = getDocTypeConfig(invoiceData.docType);
+                showCustomModal("Tersimpan", `${docConfig.title} ${invoiceData.invoiceNo} berhasil disimpan ke riwayat lokal.`, [
+                    { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold" }
+                ]);
+            } catch(e) {
+                showCustomModal("Gagal", "Gagal menyimpan riwayat ke penyimpanan browser.", [
+                    { text: "Tutup", class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs" }
+                ]);
+            }
         }
 
         function loadHistory() {
             invoicesList.innerHTML = '';
-            const storedInvoicesJson = localStorage.getItem(STORAGE_KEY);
-            const invoices = storedInvoicesJson ? JSON.parse(storedInvoicesJson) : [];
+            const stored = localStorage.getItem(STORAGE_KEY);
+            const list = stored ? JSON.parse(stored) : [];
 
-            if (invoices.length === 0) {
-                invoicesList.innerHTML = '<p class="text-center text-gray-500 italic">Tidak ada riwayat transaksi yang tersimpan secara lokal.</p>';
+            historyBadge.textContent = `${list.length} Dokumen`;
+
+            if (list.length === 0) {
+                invoicesList.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Belum ada riwayat dokumen yang tersimpan.</p>`;
                 return;
             }
 
-            invoices.forEach((invoice) => {
-                const invoiceDate = formatTimestamp(invoice.timestamp);
+            list.forEach(inv => {
+                const docConfig = getDocTypeConfig(inv.docType || 'INVOICE');
                 const card = document.createElement('div');
-                card.className = 'p-4 border border-gray-700 rounded-lg shadow-sm bg-gray-800 hover:shadow-lg transition duration-150';
-                card.id = `invoice-card-${invoice.id}`;
+                card.className = "p-3 bg-slate-800/80 border border-slate-700/60 rounded-xl space-y-2";
+                
                 card.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2">
-                        <span class="text-sm text-gray-400">${invoiceDate}</span>
-                        <span class="text-xl font-bold text-green-400">${formatRupiah(invoice.grandTotal)}</span>
+                    <div class="flex justify-between items-start gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono font-bold text-white text-xs">${inv.invoiceNo}</span>
+                                <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 font-semibold border border-amber-500/20">${docConfig.title}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400">
+                                ${formatDateIndonesia(inv.invoiceDate)} • <span class="text-slate-200 font-medium">${inv.customerName}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400">${formatRupiah(inv.financials.grandTotal)}</span>
                     </div>
-                    ${renderHistoryDetail(invoice)}
-                    <div class="flex justify-between items-center mt-2">
-                        <button class="text-gray-300 hover:text-white text-sm font-medium toggle-detail-btn" 
-                                data-invoice-id="${invoice.id}" 
-                                onclick="toggleDetail(this)">Lihat Detail Item</button>
-                        <button class="px-3 py-1 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-150" 
-                                onclick="loadInvoiceFromHistory(${JSON.stringify(invoice).replace(/"/g, '&quot;')})">Muat ke Nota Aktif</button>
+
+                    <div class="flex justify-between items-center pt-1 text-xs">
+                        <span class="text-slate-400">${inv.items.length} item barang</span>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="loadHistoryToActive('${inv.id}')" 
+                                    class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-semibold text-[11px]">
+                                Muat
+                            </button>
+                            <button type="button" onclick="deleteHistoryItem('${inv.id}')" 
+                                    class="px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded font-semibold text-[11px]">
+                                Hapus
+                            </button>
+                        </div>
                     </div>
                 `;
                 invoicesList.appendChild(card);
             });
         }
-        
-        window.loadInvoiceFromHistory = function(invoice) {
-             showCustomModal(
-                "Muat Nota",
-                "Ini akan menimpa nota Anda saat ini. Lanjutkan?",
-                [
-                    { text: "Batal", class: "border border-gray-600 text-gray-300 hover:bg-gray-700" },
-                    {
-                        text: "Ya, Muat",
-                        class: "bg-yellow-600 text-white hover:bg-yellow-700",
-                        action: () => {
-                            customerNameInput.value = invoice.customerName || '';
-                            customerName = invoice.customerName || '';
-                            items = JSON.parse(JSON.stringify(invoice.items)); 
-                            renderItems();
-                            historyContent.classList.add('hidden'); 
-                            historyToggleIcon.textContent = '►';
-                            showCustomModal("Nota Dimuat", `Nota untuk ${invoice.customerName || 'Pelanggan Umum'} dari ${formatTimestamp(invoice.timestamp)} telah dimuat.`, [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
-                        }
-                    }
-                ]
-            );
-        }
 
-        window.toggleDetail = function(buttonElement) {
-            const card = buttonElement.closest('.p-4');
-            const itemDetails = card.querySelector('ul');
+        window.loadHistoryToActive = function(id) {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            const list = stored ? JSON.parse(stored) : [];
+            const found = list.find(x => x.id === id);
+            if (!found) return;
 
-            if (itemDetails.classList.contains('hidden')) {
-                itemDetails.classList.remove('hidden');
-                buttonElement.textContent = 'Sembunyikan Detail Item';
-            } else {
-                itemDetails.classList.add('hidden');
-                buttonElement.textContent = 'Lihat Detail Item';
-            }
-        }
-        
-        // --- PROSES GENERATE PNG SOLUSI OFF-SCREEN (100% BEBAS POTONG) ---
-        window.generatePNG = async function() {
-            if (items.length === 0) {
-                 showCustomModal("Gagal Mencetak", "Nota kosong, tidak ada yang bisa dicetak.", [{ text: "Oke", class: "bg-indigo-600 text-white hover:bg-indigo-700" }]);
-                return;
-            }
+            docTypeSelect.value = found.docType || 'INVOICE';
+            handleDocTypeChange(true);
 
-            const currentCustomer = customerNameInput.value.trim() || 'Pelanggan Umum';
-            const fileName = `Nota-${currentCustomer.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0, 10)}.png`;
-            const grandTotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            invoiceNoInput.value = found.invoiceNo;
+            invoiceDateInput.value = found.invoiceDate || new Date().toISOString().slice(0, 10);
+            if (found.dueDate) invoiceDueDateInput.value = found.dueDate;
+            customerNameInput.value = found.customerName || '';
+            customerPhoneInput.value = found.customerPhone || '';
+            items = JSON.parse(JSON.stringify(found.items));
+            globalDiscountInput.value = found.financials?.globalDiscount || 0;
+            taxPercentSelect.value = String(found.financials?.taxRate || 0);
 
-            // Buat HTML khusus ekspor secara mandiri
-            const renderArea = document.getElementById('print-render-area');
-            let tableRows = '';
-            items.forEach((item, index) => {
-                const subtotal = item.price * item.qty;
-                tableRows += `
-                    <tr style="border-bottom: 1px solid #374151;">
-                        <td style="padding: 12px; font-size: 14px;">${index + 1}</td>
-                        <td style="padding: 12px; font-size: 14px;">${item.name}</td>
-                        <td style="padding: 12px; font-size: 14px;">${item.type || 'N/A'}</td>
-                        <td style="padding: 12px; font-size: 14px; text-align: right;">${formatRupiah(item.price)}</td>
-                        <td style="padding: 12px; font-size: 14px; text-align: center;">${item.qty}</td>
-                        <td style="padding: 12px; font-size: 14px; text-align: right; font-weight: 600; color: #ffffff;">${formatRupiah(subtotal)}</td>
-                    </tr>
-                `;
-            });
-
-            renderArea.innerHTML = `
-                <div style="font-family: 'Inter', sans-serif; background-color: #1f2937; color: #f3f4f6; padding: 24px; border-radius: 8px;">
-                    <h1 style="font-size: 28px; font-weight: bold; text-align: center; color: #ffffff; margin-bottom: 20px; border-bottom: 1px solid #374151; padding-bottom: 12px;">Nota Penjualan</h1>
-                    <div style="margin-bottom: 20px; border-bottom: 1px solid #4b5563; padding-bottom: 12px;">
-                        <p style="font-size: 16px; font-weight: 600; color: #f3f4f6; margin: 0;">Pelanggan: ${currentCustomer}</p>
-                        <p style="font-size: 14px; color: #9ca3af; margin: 4px 0 0 0;">Tanggal: ${new Date().toLocaleString('id-ID')}</p>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background-color: #374151; color: #d1d5db; text-transform: uppercase; font-size: 12px; text-align: left;">
-                                <th style="padding: 10px; width: 8%;">No</th>
-                                <th style="padding: 10px; width: 32%;">Barang</th>
-                                <th style="padding: 10px; width: 20%;">Jenis</th>
-                                <th style="padding: 10px; text-align: right; width: 15%;">Harga</th>
-                                <th style="padding: 10px; text-align: center; width: 10%;">Jml</th>
-                                <th style="padding: 10px; text-align: right; width: 15%;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                        <tfoot>
-                            <tr style="border-top: 3px solid #10b981; background-color: #1f2937;">
-                                <td colspan="4" style="padding: 16px; text-align: right; font-size: 18px; font-weight: bold; color: #f3f4f6;">TOTAL KESELURUHAN:</td>
-                                <td colspan="2" style="padding: 16px; text-align: right; font-size: 22px; font-weight: bold; color: #34d399;">${formatRupiah(grandTotal)}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            `;
-
-            try {
-                // Render elemen tersembunyi yang berukuran tetap & tidak dipengaruhi scroll iPad
-                const canvas = await html2canvas(renderArea, { 
-                    scale: 2, 
-                    logging: false, 
-                    useCORS: true, 
-                    backgroundColor: '#1f2937'
-                });
-
-                // Bersihkan DOM sementara
-                renderArea.innerHTML = '';
-
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        alert("Gagal mengolah gambar.");
-                        return;
-                    }
-
-                    const file = new File([blob], fileName, { type: 'image/png' });
-
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'Nota Penjualan',
-                                text: `Nota untuk ${currentCustomer}`
-                            });
-                        } catch (err) {
-                            if (err.name !== 'AbortError') {
-                                console.error('Gagal Share:', err);
-                            }
-                        }
-                    } else {
-                        const blobUrl = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                        link.download = fileName;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-                    }
-                }, 'image/png');
-
-            } catch (error) {
-                renderArea.innerHTML = '';
-                console.error("Gagal membuat PNG:", error);
-                showCustomModal("Error PNG", "Gagal membuat file PNG. Cek konsol browser untuk detail.", [{ text: "Tutup", class: "bg-red-600 text-white hover:bg-red-700" }]);
-            }
+            renderItems();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
+
+        window.deleteHistoryItem = function(id) {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            let list = stored ? JSON.parse(stored) : [];
+            list = list.filter(x => x.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            loadHistory();
+        };
+
+        window.clearEntireHistory = function() {
+            showCustomModal("Hapus Semua Riwayat", "Semua riwayat transaksi akan dihapus. Lanjutkan?", [
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { 
+                    text: "Hapus Semua", 
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
+                    action: () => {
+                        localStorage.removeItem(STORAGE_KEY);
+                        loadHistory();
+                    }
+                }
+            ]);
+        };
+
+        function exportHistoryJSON() {
+            const data = localStorage.getItem(STORAGE_KEY) || '[]';
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-vosprint-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importHistoryJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+                        loadHistory();
+                        showCustomModal("Sukses", `${parsed.length} riwayat nota dipulihkan.`, [{ text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs" }]);
+                    }
+                } catch(err) {
+                    showCustomModal("Gagal", "File JSON tidak valid.", [{ text: "Tutup", class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs" }]);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
 
         historyHeader.addEventListener('click', () => {
             const isHidden = historyContent.classList.contains('hidden');
@@ -649,20 +1261,255 @@
                 historyToggleIcon.textContent = '►';
             }
         });
-        
+
+        // Template Dokumen Cetak / Ekspor PNG
+        function buildPrintTemplate() {
+            const fin = calculateFinancials();
+            const config = getDocTypeConfig(docTypeSelect.value);
+            const invNo = invoiceNoInput.value.trim() || `${config.prefix}-DRAFT`;
+            const invDate = formatDateIndonesia(invoiceDateInput.value);
+            const dueDate = invoiceDueDateInput.value ? formatDateIndonesia(invoiceDueDateInput.value) : '';
+            const custName = customerNameInput.value.trim() || 'Pelanggan Umum';
+            const custPhone = customerPhoneInput.value.trim() || '-';
+            const bankAccount = storeInfo.bank || '5211483289 A.n Joshua Delfianto';
+
+            let logoMarkup = '';
+            if (storeInfo.logoUrl) {
+                logoMarkup = `<img src="${storeInfo.logoUrl}" style="height: 52px; width: auto; object-fit: contain; margin-right: 14px;">`;
+            } else {
+                logoMarkup = `
+                    <div style="width: 52px; height: 52px; background: #000000; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; padding: 2px;">
+                        <svg viewBox="0 0 400 400" style="width: 48px; height: 48px;" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <polygon points="52,82 84,82 118,218 86,218" fill="#FFFFFF"/>
+                            <polygon points="348,82 316,82 282,218 314,218" fill="#FFFFFF"/>
+                            <polygon points="98,98 132,98 152,218 118,218" fill="#FFFFFF"/>
+                            <polygon points="302,98 268,98 248,218 282,218" fill="#FFFFFF"/>
+                            <polygon points="154,54 246,54 230,222 170,222" fill="#FFFFFF"/>
+                            <path d="M118,218 L142,218 C142,228 156,236 172,236 L228,236 C244,236 258,228 258,218 L282,218 L288,272 L112,272 Z" fill="#FFFFFF"/>
+                            <polygon points="132,286 268,286 200,354" fill="#F59E0B"/>
+                        </svg>
+                    </div>
+                `;
+            }
+
+            let itemsRows = '';
+            items.forEach((it, idx) => {
+                const c = calculateSingleItem(it);
+                const dim = it.hasDimension ? `${it.p}×${it.l} cm` : '-';
+                const qtyStr = it.hasDimension ? `${c.unitsCount} cm (${it.qty} pcs)` : `${it.qty} ${it.unit}`;
+                const discStr = c.totalDiscount > 0 ? `<span style="color:#d97706;">-${formatRupiah(c.totalDiscount)}</span>` : '-';
+
+                itemsRows += `
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 9px 6px; text-align: center; font-size: 11px; color: #64748b;">${idx + 1}</td>
+                        <td style="padding: 9px 6px; font-size: 12px;">
+                            <strong style="color: #0f172a; display: block;">${it.name}</strong>
+                            ${it.notes ? `<div style="font-size: 10px; color: #d97706; margin-top: 1px;">📌 ${it.notes}</div>` : ''}
+                        </td>
+                        <td style="padding: 9px 6px; font-size: 11px; color: #64748b;">${it.type || '-'}</td>
+                        <td style="padding: 9px 6px; text-align: center; font-size: 11px; font-family: monospace; color: #475569;">${dim}</td>
+                        <td style="padding: 9px 6px; text-align: right; font-size: 11px; color: #334155;">${formatRupiah(it.price)}</td>
+                        <td style="padding: 9px 6px; text-align: center; font-size: 11px; font-weight: 500; color: #0f172a;">${qtyStr}</td>
+                        <td style="padding: 9px 6px; text-align: right; font-size: 11px;">${discStr}</td>
+                        <td style="padding: 9px 6px; text-align: right; font-size: 12px; font-weight: 700; color: #047857;">${formatRupiah(c.subtotal)}</td>
+                    </tr>
+                `;
+            });
+
+            return `
+                <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; background: #ffffff; color: #0f172a; border-radius: 8px; border: 1px solid #e2e8f0; padding: 28px;">
+                    
+                    <!-- KOP TOKO VOSPRINT -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center;">
+                            ${logoMarkup}
+                            <div>
+                                <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">${storeInfo.name}</h1>
+                                <p style="margin: 2px 0 0; font-size: 11px; color: #475569;">${storeInfo.tagline}</p>
+                                <p style="margin: 1px 0 0; font-size: 10px; color: #64748b;">${storeInfo.address} • WA: ${storeInfo.phone}</p>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 22px; font-weight: 800; color: #d97706; letter-spacing: 0.5px;">${config.title}</div>
+                            <div style="font-family: monospace; font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px;">${invNo}</div>
+                        </div>
+                    </div>
+
+                    <!-- INFO TRANSAKSI & PELANGGAN (BILL TO) -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 18px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #f1f5f9;">
+                        <div>
+                            <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">${config.billLabel}:</span>
+                            <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px;">${custName}</div>
+                            <span style="font-size: 11px; color: #475569;">Kontak / Alamat: ${custPhone}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="margin-bottom: 4px;">
+                                <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600;">Tanggal Terbit:</span>
+                                <div style="font-size: 12px; font-weight: 600; color: #0f172a;">${invDate}</div>
+                            </div>
+                            ${config.showDueDate && dueDate ? `
+                                <div>
+                                    <span style="font-size: 10px; text-transform: uppercase; color: #b45309; font-weight: 700;">Jatuh Tempo:</span>
+                                    <div style="font-size: 12px; font-weight: 700; color: #b45309;">${dueDate}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- TABEL BARANG -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+                        <thead>
+                            <tr style="background-color: #0f172a; color: #ffffff; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <th style="padding: 8px 6px; text-align: center; width: 5%;">No</th>
+                                <th style="padding: 8px 6px; width: 34%;">Barang</th>
+                                <th style="padding: 8px 6px; width: 12%;">Jenis</th>
+                                <th style="padding: 8px 6px; text-align: center; width: 12%;">Dimensi</th>
+                                <th style="padding: 8px 6px; text-align: right; width: 13%;">Harga</th>
+                                <th style="padding: 8px 6px; text-align: center; width: 10%;">Qty</th>
+                                <th style="padding: 8px 6px; text-align: right; width: 6%;">Diskon</th>
+                                <th style="padding: 8px 6px; text-align: right; width: 14%;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsRows}
+                        </tbody>
+                    </table>
+
+                    <!-- REKENING & TOTAL -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+                        
+                        <div style="flex: 1;">
+                            <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 12px; margin-bottom: 20px; max-width: 360px;">
+                                <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #92400e;">Pembayaran Transfer Bank:</div>
+                                <div style="font-size: 13px; font-weight: 800; color: #78350f; font-family: monospace; margin-top: 2px;">${bankAccount}</div>
+                            </div>
+
+                            <div style="display: flex; gap: 36px; text-align: center; font-size: 11px; color: #475569;">
+                                <div>
+                                    <div style="margin-bottom: 44px;">Tanda Terima,</div>
+                                    <div style="border-bottom: 1px solid #94a3b8; width: 130px; margin: 0 auto;"></div>
+                                    <div style="margin-top: 3px;">( ${custName} )</div>
+                                </div>
+                                <div>
+                                    <div style="margin-bottom: 44px;">Hormat Kami,</div>
+                                    <div style="border-bottom: 1px solid #94a3b8; width: 130px; margin: 0 auto;"></div>
+                                    <div style="margin-top: 3px;">( ${storeInfo.name} )</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="width: 290px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; margin-bottom: 5px;">
+                                <span>Subtotal Kotor:</span>
+                                <span style="font-weight: 600; color: #1e293b;">${formatRupiah(fin.grossTotal)}</span>
+                            </div>
+                            ${fin.itemDiscountsTotal > 0 ? `
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #d97706; margin-bottom: 5px;">
+                                    <span>Total Diskon Item:</span>
+                                    <span style="font-weight: 600;">-${formatRupiah(fin.itemDiscountsTotal)}</span>
+                                </div>
+                            ` : ''}
+                            ${fin.globalDiscount > 0 ? `
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #d97706; margin-bottom: 5px;">
+                                    <span>Diskon Faktur:</span>
+                                    <span style="font-weight: 600;">-${formatRupiah(fin.globalDiscount)}</span>
+                                </div>
+                            ` : ''}
+                            ${fin.taxAmount > 0 ? `
+                                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #475569; margin-bottom: 5px;">
+                                    <span>PPN (${fin.taxRate}%):</span>
+                                    <span style="font-weight: 600; color: #1e293b;">+${formatRupiah(fin.taxAmount)}</span>
+                                </div>
+                            ` : ''}
+                            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; color: #0f172a; border-top: 2px solid #0f172a; padding-top: 6px; margin-top: 4px;">
+                                <span>TOTAL AKHIR:</span>
+                                <span style="color: #047857;">${formatRupiah(fin.grandTotal)}</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+        }
+
+        window.generatePNG = async function() {
+            if (items.length === 0) return;
+
+            const renderArea = document.getElementById('print-render-area');
+            renderArea.innerHTML = buildPrintTemplate();
+
+            const config = getDocTypeConfig(docTypeSelect.value);
+            const invNo = invoiceNoInput.value.trim() || config.prefix;
+            const cust = customerNameInput.value.trim().replace(/\s+/g, '_') || 'Umum';
+            const fileName = `${config.title.replace(/\s+/g, '_')}-${invNo}-${cust}.png`;
+
+            try {
+                const canvas = await html2canvas(renderArea, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                renderArea.innerHTML = '';
+
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return;
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: `${config.title} ${invNo}`,
+                                text: `${config.title} VosPrint untuk ${cust}`
+                            });
+                            return;
+                        } catch(e) {
+                            if (e.name !== 'AbortError') console.error(e);
+                        }
+                    }
+
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
+                }, 'image/png');
+
+            } catch(e) {
+                renderArea.innerHTML = '';
+                showCustomModal("Error", "Gagal memproses gambar dokumen.", [{ text: "Tutup", class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs" }]);
+            }
+        };
+
+        window.printInvoiceBrowser = function() {
+            if (items.length === 0) return;
+            const renderArea = document.getElementById('print-render-area');
+            renderArea.innerHTML = buildPrintTemplate();
+            window.print();
+            setTimeout(() => { renderArea.innerHTML = ''; }, 1000);
+        };
+
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./service-worker.js')
-                        .then(registration => console.log('PWA ServiceWorker berhasil:', registration.scope))
-                        .catch(err => console.error('PWA ServiceWorker gagal:', err));
+                    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
                 });
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadStoreSettings();
+            handleDocTypeChange();
+            setDefaultDate();
+            populateMasterDatalist();
             renderItems();
-            populateDatalistTypes();
             loadHistory();
             registerServiceWorker();
         });

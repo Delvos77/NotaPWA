@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VosPrint - Nota Digital</title>
+    <title>VosPrint - Nota & Invoice Digital</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0b0f19"/>
@@ -26,7 +26,7 @@
             color: #f1f5f9;
         }
 
-        /* Container Tersembunyi Khusus Ekspor PNG (Rasio Presisi & Anti-Clipping) */
+        /* Container Tersembunyi Khusus Ekspor PNG (Presisi Tinggi) */
         #print-render-area {
             position: fixed;
             left: -9999px;
@@ -61,26 +61,18 @@
 
     <div id="app-container" class="w-full max-w-5xl space-y-6">
 
-        <!-- HEADER APLIKASI (BERSIH & MINIMALIS) -->
+        <!-- HEADER APLIKASI VOSPRINT -->
         <header class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3.5">
-                <!-- LOGO RESMI VOSPRINT PRESISI TINGGI -->
                 <div id="brand-logo-preview" class="w-12 h-12 rounded-xl bg-black border border-slate-700/80 flex items-center justify-center shadow-md p-1 flex-shrink-0">
                     <svg viewBox="0 0 400 400" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect width="400" height="400" fill="#000000"/>
-                        <!-- Bilah Kiri Luar -->
                         <polygon points="52,82 84,82 118,218 86,218" fill="#FFFFFF"/>
-                        <!-- Bilah Kanan Luar -->
                         <polygon points="348,82 316,82 282,218 314,218" fill="#FFFFFF"/>
-                        <!-- Bilah Kiri Dalam -->
                         <polygon points="98,98 132,98 152,218 118,218" fill="#FFFFFF"/>
-                        <!-- Bilah Kanan Dalam -->
                         <polygon points="302,98 268,98 248,218 282,218" fill="#FFFFFF"/>
-                        <!-- Kolom Vertikal Tengah (Tertinggi) -->
                         <polygon points="154,54 246,54 230,222 170,222" fill="#FFFFFF"/>
-                        <!-- Mangkuk Penyangga Bawah (U-Shape Bar Putih) -->
                         <path d="M118,218 L142,218 C142,228 156,236 172,236 L228,236 C244,236 258,228 258,218 L282,218 L288,272 L112,272 Z" fill="#FFFFFF"/>
-                        <!-- Segitiga Emas Bawah -->
                         <polygon points="132,286 268,286 200,354" fill="#F59E0B"/>
                     </svg>
                 </div>
@@ -101,7 +93,7 @@
                     Profil Toko
                 </button>
                 <button type="button" onclick="createNewInvoicePrompt()" class="px-3.5 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5">
-                    + Nota Baru
+                    + Lembar Baru
                 </button>
             </div>
         </header>
@@ -158,7 +150,7 @@
 
         <!-- FORM DATA NOTA & PELANGGAN -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-            <!-- Grid Atas: Info Dokumen & Tanggal -->
+            <!-- Grid Atas: Metadata Dokumen -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Jenis Dokumen *</label>
@@ -169,7 +161,7 @@
                     </select>
                 </div>
                 <div>
-                    <label id="doc-no-label" class="block text-xs font-medium text-slate-400 mb-1.5">Nomor Dokumen</label>
+                    <label id="doc-no-label" class="block text-xs font-medium text-slate-400 mb-1.5">Nomor Invoice</label>
                     <div class="flex gap-1.5">
                         <input type="text" id="invoice-no" 
                                class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-mono focus:border-indigo-500 focus:outline-none">
@@ -191,7 +183,7 @@
                 </div>
             </div>
 
-            <!-- Grid Bawah: Info Pelanggan & Alamat (Lega & Tidak Terhimpit) -->
+            <!-- Grid Bawah: Info Pelanggan (Lega & Proporsional) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-800/80">
                 <div>
                     <label id="customer-name-label" class="block text-xs font-medium text-slate-400 mb-1.5">Ditagihkan Kepada (Bill To) *</label>
@@ -200,23 +192,31 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Alamat & Kontak Pelanggan (Opsional)</label>
-                    <input type="text" id="customer-phone" placeholder="No. Telepon / WhatsApp / Alamat pengiriman"
+                    <input type="text" id="customer-phone" placeholder="No. WhatsApp / Alamat pengiriman"
                            class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
                 </div>
             </div>
         </div>
 
-        <!-- FORM INPUT ITEM (DENGAN DIMENSI CM & PERHITUNGAN LUAS M²) -->
+        <!-- FORM INPUT ITEM (DUAL MODE: OTOMATIS UKURAN vs NON-UKURAN / MANUAL) -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-slate-800 pb-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-slate-800 pb-3">
                 <h2 id="item-form-title" class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                     Input Barang / Jasa Cetak
                 </h2>
-                <label class="text-xs text-slate-400 flex items-center cursor-pointer select-none">
-                    <input type="checkbox" id="toggle-dimension" class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-indigo-500 mr-1.5" checked>
-                    Hitung Luas Dimensi (Panjang × Lebar)
-                </label>
+                
+                <!-- PILIHAN METODE HITUNG JELAS -->
+                <div class="flex items-center gap-2 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
+                    <button type="button" id="mode-dimensi-btn" onclick="setItemMode(true)" 
+                            class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">
+                        📐 Pakai Ukuran (P × L cm)
+                    </button>
+                    <button type="button" id="mode-manual-btn" onclick="setItemMode(false)" 
+                            class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+                        📦 Tanpa Ukuran (Pcs/Rim/Jasa)
+                    </button>
+                </div>
             </div>
 
             <form id="item-form" class="space-y-4">
@@ -237,7 +237,7 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Satuan *</label>
                         <select id="item-unit" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
-                            <option value="Cm">Cm</option>
+                            <option value="Meter (m²)">Meter (m²)</option>
                             <option value="Pcs">Pcs</option>
                             <option value="Lembar">Lembar</option>
                             <option value="Rim">Rim</option>
@@ -248,7 +248,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Harga Satuan (Rp) *</label>
+                        <label id="item-price-label" class="block text-xs font-medium text-slate-400 mb-1">Harga Satuan (Rp) *</label>
                         <input type="text" id="item-price" placeholder="Rp 0" required
                                class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-emerald-400 font-semibold text-sm focus:border-indigo-500 focus:outline-none">
                     </div>
@@ -256,15 +256,15 @@
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                     <div id="dim-p-wrapper">
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Panjang (P) cm</label>
-                        <input type="number" step="any" min="0" id="item-dim-p" placeholder="100" value="100"
-                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-medium text-amber-400/90 mb-1">Panjang (P) cm</label>
+                        <input type="number" step="any" min="1" id="item-dim-p" placeholder="100" value="100"
+                               class="w-full p-2.5 bg-slate-800 border border-amber-500/30 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none">
                     </div>
 
                     <div id="dim-l-wrapper">
-                        <label class="block text-xs font-medium text-slate-400 mb-1">Lebar (L) cm</label>
-                        <input type="number" step="any" min="0" id="item-dim-l" placeholder="100" value="100"
-                               class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
+                        <label class="block text-xs font-medium text-amber-400/90 mb-1">Lebar (L) cm</label>
+                        <input type="number" step="any" min="1" id="item-dim-l" placeholder="100" value="100"
+                               class="w-full p-2.5 bg-slate-800 border border-amber-500/30 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none">
                     </div>
 
                     <div>
@@ -286,10 +286,10 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 bg-slate-950/40 p-3 rounded-xl border border-slate-800">
                     <div class="text-xs sm:text-sm text-slate-400">
-                        Subtotal: <span class="font-bold text-emerald-400 text-base" id="preview-val">Rp 0</span>
-                        <span id="dimension-summary" class="ml-2 text-xs text-slate-400 font-mono"></span>
+                        Subtotal Item: <span class="font-bold text-emerald-400 text-base sm:text-lg" id="preview-val">Rp 0</span>
+                        <div id="dimension-summary" class="text-xs text-amber-300 font-mono mt-0.5"></div>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -326,9 +326,9 @@
                             <th class="px-3 py-3 text-center w-10">No</th>
                             <th class="px-3 py-3 min-w-[180px]">Barang & Catatan</th>
                             <th class="px-3 py-3">Jenis</th>
-                            <th class="px-3 py-3 text-center">Dimensi</th>
-                            <th class="px-3 py-3 text-right">Harga</th>
-                            <th class="px-3 py-3 text-center">Qty / Satuan</th>
+                            <th class="px-3 py-3 text-center">Ukuran (P×L)</th>
+                            <th class="px-3 py-3 text-right">Harga Satuan</th>
+                            <th class="px-3 py-3 text-center">Hitungan Qty</th>
                             <th class="px-3 py-3 text-right">Diskon</th>
                             <th class="px-3 py-3 text-right font-bold text-slate-200">Subtotal</th>
                             <th class="px-3 py-3 text-center w-20">Aksi</th>
@@ -374,7 +374,7 @@
                         <span id="total-item-discounts" class="text-amber-400 font-semibold">- Rp 0</span>
                     </div>
                     <div class="flex justify-between items-center text-xs sm:text-sm pt-1 border-t border-slate-800">
-                        <span class="text-slate-400">Diskon Nota:</span>
+                        <span class="text-slate-400">Diskon Nota (Global):</span>
                         <div class="flex items-center gap-1 w-28">
                             <span class="text-xs text-slate-400">Rp</span>
                             <input type="number" id="global-discount" value="0" min="0" oninput="calculateFinancials()"
@@ -469,22 +469,21 @@
     <script>
         // --- MASTER DATA BARANG PERCETAKAN ---
         const masterBarang = [
-            { name: "Spanduk Flexi 280gr", price: 20, type: "280Hr", unit: "Cm" },
-            { name: "Spanduk Flexi 340gr (High Res)", price: 25, type: "340Hr", unit: "Cm" },
-            { name: "Stiker Vinyl Glossy / Doff", price: 50, type: "Vinyl", unit: "Cm" },
-            { name: "Stiker Albatros + Laminasi", price: 70, type: "Albatros", unit: "Cm" },
-            { name: "Banner Backlite (Neonbox)", price: 65, type: "Backlite", unit: "Cm" },
-            { name: "Brosur Art Paper 150gr (A4)", price: 2500, type: "Ap150", unit: "Lembar" },
-            { name: "Kartu Nama Art Carton 260gr", price: 35000, type: "Ac260", unit: "Pack" },
-            { name: "Cetak Bolak-Balik Ac260 BB", price: 6000, type: "Ac260BB", unit: "Lembar" },
-            { name: "X-Banner Stand 60x160", price: 85000, type: "Display", unit: "Set" },
-            { name: "Roll Up Banner 80x200", price: 220000, type: "Display", unit: "Set" }
+            { name: "Spanduk Flexi 280gr", price: 30000, type: "280Hr", unit: "Meter (m²)", hasDim: true },
+            { name: "Spanduk Flexi 340gr (High Res)", price: 35000, type: "340Hr", unit: "Meter (m²)", hasDim: true },
+            { name: "Stiker Vinyl Glossy / Doff", price: 65000, type: "Vinyl", unit: "Meter (m²)", hasDim: true },
+            { name: "Stiker Albatros + Laminasi", price: 75000, type: "Albatros", unit: "Meter (m²)", hasDim: true },
+            { name: "Banner Backlite (Neonbox)", price: 70000, type: "Backlite", unit: "Meter (m²)", hasDim: true },
+            { name: "Brosur Art Paper 150gr (A4)", price: 2500, type: "Ap150", unit: "Lembar", hasDim: false },
+            { name: "Kartu Nama Art Carton 260gr", price: 35000, type: "Ac260", unit: "Pack", hasDim: false },
+            { name: "Cetak Bolak-Balik Ac260 BB", price: 6000, type: "Ac260BB", unit: "Lembar", hasDim: false },
+            { name: "X-Banner Stand 60x160", price: 85000, type: "Display", unit: "Set", hasDim: false },
+            { name: "Roll Up Banner 80x200", price: 220000, type: "Display", unit: "Set", hasDim: false }
         ];
 
         const STORAGE_KEY = 'vosprint_offline_invoice_history';
         const STORE_KEY = 'vosprint_store_settings';
 
-        // SVG Logo Resmi VosPrint yang presisi
         const DEFAULT_VOSPRINT_SVG = `
             <svg viewBox="0 0 400 400" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="400" height="400" fill="#000000"/>
@@ -500,6 +499,8 @@
 
         let items = [];
         let editingIndex = -1;
+        let isDimensionMode = true; // True: Ukuran PxL cm, False: Manual / Non-Ukuran
+
         let storeInfo = {
             name: "VosPrint",
             tagline: "Digital Printing & Advertising Solution",
@@ -533,12 +534,17 @@
         const itemTypeInput = document.getElementById('item-type');
         const itemUnitInput = document.getElementById('item-unit');
         const itemPriceInput = document.getElementById('item-price');
+        const itemPriceLabel = document.getElementById('item-price-label');
         const itemDimPInput = document.getElementById('item-dim-p');
         const itemDimLInput = document.getElementById('item-dim-l');
+        const dimPWrapper = document.getElementById('dim-p-wrapper');
+        const dimLWrapper = document.getElementById('dim-l-wrapper');
+        const modeDimensiBtn = document.getElementById('mode-dimensi-btn');
+        const modeManualBtn = document.getElementById('mode-manual-btn');
+
         const itemQtyInput = document.getElementById('item-qty');
         const itemDiscountInput = document.getElementById('item-discount');
         const itemNotesInput = document.getElementById('item-notes');
-        const toggleDimensionCheckbox = document.getElementById('toggle-dimension');
         const datalistTypes = document.getElementById('master-types');
 
         // Financial Elements
@@ -589,6 +595,86 @@
             customModal.classList.add('flex');
         }
 
+        function hideCustomModal() {
+            customModal.classList.remove('flex');
+            customModal.classList.add('hidden');
+        }
+
+        function formatRupiah(number) {
+            const num = Number(number) || 0;
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(num);
+        }
+
+        function cleanNumber(val) {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            
+            // Konversi ke string dan buang semua simbol kecuali angka, titik, dan koma
+            let str = String(val).trim().replace(/[^0-9.,]/g, '');
+            if (!str) return 0;
+
+            // Jika ada format Rupiah Indonesia (cth: "30.000" atau "30.000,00")
+            // Titik adalah pemisah ribuan, koma adalah pemisah desimal
+            if (str.includes('.') && str.includes(',')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes('.')) {
+                // Jika hanya ada titik:
+                // Jika titik diikuti tepat 3 digit angka (seperti 30.000 atau 1.500.000), ini adalah ribuan
+                const parts = str.split('.');
+                const isThousandPattern = parts.length > 1 && parts.slice(1).every(p => p.length === 3);
+                if (isThousandPattern) {
+                    str = str.replace(/\./g, '');
+                }
+            } else if (str.includes(',')) {
+                // Jika ada koma saja, anggap desimal atau desimal IDR
+                str = str.replace(',', '.');
+            }
+
+            const parsed = parseFloat(str);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function formatDateIndonesia(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        // Beralih Antara Mode Ukuran (P x L cm) vs Non-Ukuran (Manual Qty)
+        window.setItemMode = function(withDimension) {
+            isDimensionMode = withDimension;
+            if (isDimensionMode) {
+                modeDimensiBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
+                modeManualBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
+                dimPWrapper.classList.remove('hidden');
+                dimLWrapper.classList.remove('hidden');
+                itemPriceLabel.textContent = "Harga per Meter (m²) *";
+                if (!itemDimPInput.value) itemDimPInput.value = "100";
+                if (!itemDimLInput.value) itemDimLInput.value = "100";
+                itemUnitInput.value = "Meter (m²)";
+            } else {
+                modeManualBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
+                modeDimensiBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
+                dimPWrapper.classList.add('hidden');
+                dimLWrapper.classList.add('hidden');
+                itemPriceLabel.textContent = "Harga Satuan (Rp) *";
+                if (itemUnitInput.value === "Meter (m²)") {
+                    itemUnitInput.value = "Pcs";
+                }
+            }
+            updateFormPreview();
+        };
+
         function getDocTypeConfig(type) {
             switch(type) {
                 case 'INVOICE':
@@ -630,41 +716,9 @@
             const now = new Date();
             invoiceDateInput.value = now.toISOString().slice(0, 10);
             
-            // Default Due Date: +7 hari
             const due = new Date();
             due.setDate(now.getDate() + 7);
             invoiceDueDateInput.value = due.toISOString().slice(0, 10);
-        }
-
-        function hideCustomModal() {
-            customModal.classList.remove('flex');
-            customModal.classList.add('hidden');
-        }
-
-        function formatRupiah(number) {
-            const num = Number(number) || 0;
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(num);
-        }
-
-        function cleanNumber(val) {
-            if (!val) return 0;
-            return parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
-        }
-
-        function formatDateIndonesia(dateStr) {
-            if (!dateStr) return '-';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
         }
 
         // Pengaturan Toko
@@ -763,7 +817,10 @@
             });
         }
 
-        // Kalkulasi Item (Dimensi dalam cm)
+        // --- RUMUS KALKULASI PRESISI PERCETAKAN ---
+        // Jika ada ukuran: Luas m² = (P cm × L cm) / 10000.
+        // Gross = Luas m² × Qty × Harga per Meter.
+        // Jika tanpa ukuran: Gross = Qty × Harga Satuan.
         function calculateSingleItem(item) {
             const p = Number(item.p) || 0;
             const l = Number(item.l) || 0;
@@ -771,19 +828,23 @@
             const price = Number(item.price) || 0;
             const discount = Number(item.discount) || 0;
 
-            let unitsCount = qty;
-            let areaCm = 0;
-            if (item.hasDimension) {
-                // Perhitungan luas cm (P cm × L cm)
-                areaCm = Math.round(p * l);
-                unitsCount = areaCm * qty;
+            let areaM2 = 0;
+            let totalVolume = qty;
+            let gross = 0;
+
+            if (item.hasDimension && p > 0 && l > 0) {
+                // Luas 1 pcs dalam meter persegi
+                areaM2 = (p * l) / 10000;
+                totalVolume = areaM2 * qty;
+                gross = Math.round(totalVolume * price);
+            } else {
+                gross = Math.round(qty * price);
             }
 
-            const gross = unitsCount * price;
-            const totalDiscount = discount * qty;
+            const totalDiscount = Math.round(discount * qty);
             const subtotal = Math.max(0, gross - totalDiscount);
 
-            return { unitsCount, areaCm, gross, totalDiscount, subtotal };
+            return { areaM2, totalVolume, gross, totalDiscount, subtotal };
         }
 
         function updateFormPreview() {
@@ -792,24 +853,25 @@
             const qty = parseInt(itemQtyInput.value) || 1;
             const price = cleanNumber(itemPriceInput.value);
             const discount = cleanNumber(itemDiscountInput.value);
-            const hasDim = toggleDimensionCheckbox.checked;
 
-            let units = qty;
-            let summaryText = "";
-            if (hasDim) {
-                const area = Math.round(p * l);
-                units = area * qty;
-                summaryText = `(${p}×${l} cm = ${area} cm × ${qty} pcs = ${units} cm)`;
+            let previewText = "";
+            let gross = 0;
+
+            if (isDimensionMode && p > 0 && l > 0) {
+                const areaM2 = (p * l) / 10000; // Contoh: 100x100 = 1 m2
+                const totalM2 = areaM2 * qty;
+                gross = Math.round(totalM2 * price);
+                previewText = `(${p}×${l} cm = ${areaM2.toFixed(2)} m² × ${qty} pcs = ${totalM2.toFixed(2)} m² × ${formatRupiah(price)})`;
             } else {
-                summaryText = `(${qty} ${itemUnitInput.value})`;
+                gross = Math.round(qty * price);
+                previewText = `(${qty} ${itemUnitInput.value} × ${formatRupiah(price)})`;
             }
 
-            const gross = units * price;
             const totalDisc = discount * qty;
             const subtotal = Math.max(0, gross - totalDisc);
 
             document.getElementById('preview-val').textContent = formatRupiah(subtotal);
-            document.getElementById('dimension-summary').textContent = summaryText;
+            document.getElementById('dimension-summary').textContent = previewText;
         }
 
         itemTypeInput.addEventListener('input', function() {
@@ -819,6 +881,7 @@
                 if (!itemNameInput.value) itemNameInput.value = matched.name;
                 if (!cleanNumber(itemPriceInput.value)) itemPriceInput.value = formatRupiah(matched.price);
                 if (matched.unit) itemUnitInput.value = matched.unit;
+                setItemMode(Boolean(matched.hasDim));
             }
             updateFormPreview();
         });
@@ -847,22 +910,6 @@
             elem.addEventListener('input', updateFormPreview);
         });
 
-        toggleDimensionCheckbox.addEventListener('change', function() {
-            const isChecked = this.checked;
-            document.getElementById('dim-p-wrapper').style.opacity = isChecked ? '1' : '0.4';
-            document.getElementById('dim-l-wrapper').style.opacity = isChecked ? '1' : '0.4';
-            itemDimPInput.disabled = !isChecked;
-            itemDimLInput.disabled = !isChecked;
-            if (!isChecked) {
-                itemDimPInput.value = '';
-                itemDimLInput.value = '';
-            } else if (!itemDimPInput.value) {
-                itemDimPInput.value = '100';
-                itemDimLInput.value = '100';
-            }
-            updateFormPreview();
-        });
-
         itemForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -871,14 +918,21 @@
             const unit = itemUnitInput.value;
             const price = cleanNumber(itemPriceInput.value);
             const qty = parseInt(itemQtyInput.value) || 1;
-            const hasDimension = toggleDimensionCheckbox.checked;
+            const hasDimension = isDimensionMode;
             const p = hasDimension ? (parseFloat(itemDimPInput.value) || 0) : 0;
             const l = hasDimension ? (parseFloat(itemDimLInput.value) || 0) : 0;
             const discount = cleanNumber(itemDiscountInput.value);
             const notes = itemNotesInput.value.trim();
 
             if (!name || price <= 0 || qty <= 0) {
-                showCustomModal("Input Tidak Valid", "Pastikan Nama Barang, Harga Satuan (> 0), dan Qty (> 0) terisi.", [
+                showCustomModal("Input Belum Lengkap", "Pastikan Nama Barang, Harga Satuan (> 0), dan Qty (> 0) sudah diisi.", [
+                    { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs" }
+                ]);
+                return;
+            }
+
+            if (hasDimension && (p <= 0 || l <= 0)) {
+                showCustomModal("Ukuran Tidak Valid", "Silakan masukkan ukuran Panjang (P) dan Lebar (L) lebih dari 0 cm, atau pilih mode 'Tanpa Ukuran'.", [
                     { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs" }
                 ]);
                 return;
@@ -903,13 +957,13 @@
             editingIndex = -1;
             itemNameInput.value = '';
             itemTypeInput.value = '';
-            itemUnitInput.value = 'Cm';
             itemPriceInput.value = '';
-            itemDimPInput.value = '100';
-            itemDimLInput.value = '100';
             itemQtyInput.value = '1';
             itemDiscountInput.value = '';
             itemNotesInput.value = '';
+            setItemMode(true);
+            itemDimPInput.value = '100';
+            itemDimLInput.value = '100';
             itemFormTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Input Barang / Jasa Cetak`;
             submitBtnText.textContent = "+ Tambahkan ke Nota";
             updateFormPreview();
@@ -936,7 +990,9 @@
                     row.className = 'hover:bg-slate-800/50 transition duration-150 border-b border-slate-800/80';
 
                     const dimLabel = item.hasDimension ? `${item.p}×${item.l} cm` : '-';
-                    const qtyLabel = item.hasDimension ? `${calc.unitsCount} cm (${item.qty} pcs)` : `${item.qty} ${item.unit}`;
+                    const qtyDetail = item.hasDimension 
+                        ? `${calc.totalVolume.toFixed(2)} m² (${item.qty} pcs)` 
+                        : `${item.qty} ${item.unit}`;
                     const discountLabel = calc.totalDiscount > 0 ? `-${formatRupiah(calc.totalDiscount)}` : '-';
 
                     row.innerHTML = `
@@ -948,9 +1004,9 @@
                         <td class="px-3 py-3 text-xs text-slate-300">
                             <span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">${item.type || '-'}</span>
                         </td>
-                        <td class="px-3 py-3 text-center text-xs text-slate-300 font-mono">${dimLabel}</td>
+                        <td class="px-3 py-3 text-center text-xs text-amber-300 font-mono">${dimLabel}</td>
                         <td class="px-3 py-3 text-right text-xs text-slate-300">${formatRupiah(item.price)}</td>
-                        <td class="px-3 py-3 text-center text-xs text-slate-200">${qtyLabel}</td>
+                        <td class="px-3 py-3 text-center text-xs text-slate-200 font-medium">${qtyDetail}</td>
                         <td class="px-3 py-3 text-right text-xs text-amber-400">${discountLabel}</td>
                         <td class="px-3 py-3 text-right text-sm font-bold text-emerald-400">${formatRupiah(calc.subtotal)}</td>
                         <td class="px-3 py-3 text-center">
@@ -980,16 +1036,15 @@
             editingIndex = index;
             itemNameInput.value = it.name;
             itemTypeInput.value = it.type;
-            itemUnitInput.value = it.unit || 'Cm';
+            itemUnitInput.value = it.unit || 'Meter (m²)';
             itemPriceInput.value = formatRupiah(it.price);
-            toggleDimensionCheckbox.checked = it.hasDimension;
-            itemDimPInput.value = it.p;
-            itemDimLInput.value = it.l;
+            setItemMode(Boolean(it.hasDimension));
+            itemDimPInput.value = it.p || '100';
+            itemDimLInput.value = it.l || '100';
             itemQtyInput.value = it.qty;
             itemDiscountInput.value = it.discount ? formatRupiah(it.discount) : '';
             itemNotesInput.value = it.notes || '';
 
-            toggleDimensionCheckbox.dispatchEvent(new Event('change'));
             updateFormPreview();
 
             itemFormTitle.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Edit Item: ${it.name}`;
@@ -1064,7 +1119,7 @@
 
         function createNewInvoicePrompt() {
             if (items.length > 0) {
-                showCustomModal("Buat Nota Baru", "Buka lembar baru? Item aktif saat ini akan dikosongkan.", [
+                showCustomModal("Buat Lembar Baru", "Buka lembar baru? Item aktif saat ini akan dikosongkan.", [
                     { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
                     { 
                         text: "Buat Baru", 
@@ -1296,7 +1351,9 @@
             items.forEach((it, idx) => {
                 const c = calculateSingleItem(it);
                 const dim = it.hasDimension ? `${it.p}×${it.l} cm` : '-';
-                const qtyStr = it.hasDimension ? `${c.unitsCount} cm (${it.qty} pcs)` : `${it.qty} ${it.unit}`;
+                const qtyStr = it.hasDimension 
+                    ? `${c.totalVolume.toFixed(2)} m² (${it.qty} pcs)` 
+                    : `${it.qty} ${it.unit}`;
                 const discStr = c.totalDiscount > 0 ? `<span style="color:#d97706;">-${formatRupiah(c.totalDiscount)}</span>` : '-';
 
                 itemsRows += `
@@ -1361,11 +1418,11 @@
                         <thead>
                             <tr style="background-color: #0f172a; color: #ffffff; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
                                 <th style="padding: 8px 6px; text-align: center; width: 5%;">No</th>
-                                <th style="padding: 8px 6px; width: 34%;">Barang</th>
+                                <th style="padding: 8px 6px; width: 32%;">Barang</th>
                                 <th style="padding: 8px 6px; width: 12%;">Jenis</th>
-                                <th style="padding: 8px 6px; text-align: center; width: 12%;">Dimensi</th>
+                                <th style="padding: 8px 6px; text-align: center; width: 14%;">Ukuran (P×L)</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 13%;">Harga</th>
-                                <th style="padding: 8px 6px; text-align: center; width: 10%;">Qty</th>
+                                <th style="padding: 8px 6px; text-align: center; width: 12%;">Hitungan Qty</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 6%;">Diskon</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 14%;">Subtotal</th>
                             </tr>
@@ -1509,6 +1566,7 @@
             handleDocTypeChange();
             setDefaultDate();
             populateMasterDatalist();
+            setItemMode(true);
             renderItems();
             loadHistory();
             registerServiceWorker();

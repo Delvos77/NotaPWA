@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>VosPrint - Nota & Invoice Digital</title>
     
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#0b0f19"/>
+    <meta name="theme-color" content="#080c14"/>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -108,8 +111,13 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Toko</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Toko (Kop)</label>
                     <input type="text" id="store-name" value="VosPrint"
+                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-semibold focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Nama Pemilik / Tanda Tangan</label>
+                    <input type="text" id="store-owner" value="Joshua Delfianto"
                            class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-semibold focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
@@ -132,13 +140,13 @@
                     <input type="text" id="store-phone" value="0812-3456-7890"
                            class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500">
                 </div>
-                <div>
+                <div class="sm:col-span-2 md:col-span-3 pt-1">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Ganti Logo Kustom (Opsional)</label>
                     <input type="file" id="store-logo-file" accept="image/*" onchange="handleCustomLogoUpload(event)"
-                           class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer">
+                           class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700 cursor-pointer">
                 </div>
             </div>
-            <div class="mt-4 flex justify-between items-center pt-2">
+            <div class="mt-4 flex justify-between items-center pt-2 border-t border-slate-800">
                 <button type="button" onclick="resetToDefaultLogo()" class="text-xs text-slate-400 hover:text-amber-400 underline">
                     Gunakan Logo Bawaan VosPrint
                 </button>
@@ -155,13 +163,13 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1.5">Jenis Dokumen *</label>
                     <select id="doc-type" onchange="handleDocTypeChange()" 
-                            class="w-full p-2.5 bg-slate-800 border border-amber-500/40 rounded-lg text-amber-300 font-semibold text-sm focus:border-amber-500 focus:outline-none transition">
+                            class="w-full p-2.5 bg-slate-800 border border-amber-500/40 rounded-lg text-amber-300 font-semibold text-sm focus:border-amber-500 focus:outline-none transition cursor-pointer">
                         <option value="NOTA">Nota Penjualan</option>
                         <option value="INVOICE" selected>Invoice / Faktur</option>
                     </select>
                 </div>
                 <div>
-                    <label id="doc-no-label" class="block text-xs font-medium text-slate-400 mb-1.5">Nomor Invoice</label>
+                    <label id="doc-no-label" class="block text-xs font-medium text-slate-400 mb-1.5">Nomor Dokumen</label>
                     <div class="flex gap-1.5">
                         <input type="text" id="invoice-no" 
                                class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm font-mono focus:border-indigo-500 focus:outline-none">
@@ -177,14 +185,20 @@
                            class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 focus:outline-none">
                 </div>
                 <div id="due-date-container">
-                    <label class="block text-xs font-medium text-amber-400/90 mb-1.5">Jatuh Tempo (Due Date)</label>
-                    <input type="date" id="invoice-due-date"
-                           class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-amber-500 focus:outline-none">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-medium text-amber-400/90">Jatuh Tempo (Opsional)</label>
+                        <label class="flex items-center gap-1 text-[11px] text-slate-400 cursor-pointer">
+                            <input type="checkbox" id="enable-due-date" onchange="toggleDueDateInput()" class="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-0">
+                            Aktifkan
+                        </label>
+                    </div>
+                    <input type="date" id="invoice-due-date" disabled
+                           class="w-full p-2.5 bg-slate-800/50 border border-slate-700/60 rounded-lg text-slate-400 text-sm focus:border-amber-500 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed">
                 </div>
             </div>
 
-            <!-- Grid Bawah: Info Pelanggan (Lega & Proporsional) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-800/80">
+            <!-- Grid Bawah: Info Pelanggan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-800">
                 <div>
                     <label id="customer-name-label" class="block text-xs font-medium text-slate-400 mb-1.5">Ditagihkan Kepada (Bill To) *</label>
                     <input type="text" id="customer-name" placeholder="Nama Pelanggan / Perusahaan"
@@ -206,14 +220,14 @@
                     Input Barang / Jasa Cetak
                 </h2>
                 
-                <!-- PILIHAN METODE HITUNG JELAS -->
+                <!-- PILIHAN METODE HITUNG -->
                 <div class="flex items-center gap-2 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
                     <button type="button" id="mode-dimensi-btn" onclick="setItemMode(true)" 
-                            class="px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">
+                            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer">
                         📐 Pakai Ukuran (P × L cm)
                     </button>
                     <button type="button" id="mode-manual-btn" onclick="setItemMode(false)" 
-                            class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition">
+                            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer">
                         📦 Tanpa Ukuran (Pcs/Rim/Jasa)
                     </button>
                 </div>
@@ -248,7 +262,7 @@
                     </div>
 
                     <div>
-                        <label id="item-price-label" class="block text-xs font-medium text-slate-400 mb-1">Harga Satuan (Rp) *</label>
+                        <label id="item-price-label" class="block text-xs font-medium text-slate-400 mb-1">Harga per Meter (m²) *</label>
                         <input type="text" id="item-price" placeholder="Rp 0" required
                                class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-emerald-400 font-semibold text-sm focus:border-indigo-500 focus:outline-none">
                     </div>
@@ -294,11 +308,11 @@
 
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="resetItemForm()" 
-                                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm rounded-xl transition">
+                                class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm rounded-xl transition cursor-pointer">
                             Reset Form
                         </button>
                         <button type="submit" id="submit-item-btn"
-                                class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg transition">
+                                class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-lg transition cursor-pointer">
                             <span id="submit-btn-text">+ Tambahkan ke Nota</span>
                         </button>
                     </div>
@@ -314,7 +328,7 @@
                     <span id="items-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">0 item</span>
                 </div>
                 <button type="button" onclick="clearAllItems()" id="clear-btn-top"
-                        class="text-xs text-rose-400 hover:text-rose-300 transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                        class="text-xs text-rose-400 hover:text-rose-300 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer" disabled>
                     Kosongkan Nota
                 </button>
             </div>
@@ -328,7 +342,7 @@
                             <th class="px-3 py-3">Jenis</th>
                             <th class="px-3 py-3 text-center">Ukuran (P×L)</th>
                             <th class="px-3 py-3 text-right">Harga Satuan</th>
-                            <th class="px-3 py-3 text-center">Hitungan Qty</th>
+                            <th class="px-3 py-3 text-center">Qty</th>
                             <th class="px-3 py-3 text-right">Diskon</th>
                             <th class="px-3 py-3 text-right font-bold text-slate-200">Subtotal</th>
                             <th class="px-3 py-3 text-center w-20">Aksi</th>
@@ -358,7 +372,7 @@
                             <div class="text-sm sm:text-base font-bold text-amber-400 font-mono" id="bank-info-display">5211483289 A.n Joshua Delfianto</div>
                         </div>
                     </div>
-                    <button type="button" onclick="copyBankAccount()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition">
+                    <button type="button" onclick="copyBankAccount()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition cursor-pointer">
                         Salin
                     </button>
                 </div>
@@ -384,7 +398,7 @@
                     <div class="flex justify-between items-center text-xs sm:text-sm">
                         <div class="flex items-center gap-2">
                             <span class="text-slate-400">PPN:</span>
-                            <select id="tax-percent" onchange="calculateFinancials()" class="text-xs bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 focus:outline-none">
+                            <select id="tax-percent" onchange="calculateFinancials()" class="text-xs bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300 focus:outline-none cursor-pointer">
                                 <option value="0">0%</option>
                                 <option value="11">11%</option>
                                 <option value="12">12%</option>
@@ -404,19 +418,19 @@
         <!-- TOMBOL AKSI UTAMA -->
         <div class="flex flex-wrap items-center justify-end gap-2.5 p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
             <button type="button" onclick="clearAllItems()" id="clear-button-bottom"
-                    class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-medium rounded-xl transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-medium rounded-xl transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer" disabled>
                 Bersihkan Nota
             </button>
             <button type="button" onclick="saveInvoice()" id="save-button" 
-                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer" disabled>
                 Simpan Riwayat
             </button>
             <button type="button" onclick="printInvoiceBrowser()" id="print-browser-button"
-                    class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none" disabled>
+                    class="px-4 py-2.5 bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-medium rounded-xl shadow transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer" disabled>
                 Cetak / PDF
             </button>
             <button type="button" onclick="generatePNG()" id="print-image-button" 
-                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5" disabled>
+                    class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer" disabled>
                 Ekspor Gambar PNG
             </button>
         </div>
@@ -427,7 +441,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-base">⏱️</span>
                     <h3 class="font-bold text-white text-sm sm:text-base">Riwayat Transaksi Tersimpan</h3>
-                    <span id="history-counter-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">0 Nota</span>
+                    <span id="history-counter-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">0 Dokumen</span>
                 </div>
                 <span id="history-toggle-icon" class="text-slate-400 text-sm">▼</span>
             </div>
@@ -435,7 +449,7 @@
             <div id="history-content" class="p-4 border-t border-slate-800 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800 text-xs">
                     <div class="flex items-center gap-2">
-                        <button onclick="exportHistoryJSON()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700">
+                        <button onclick="exportHistoryJSON()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 cursor-pointer">
                             Backup (JSON)
                         </button>
                         <label class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 cursor-pointer">
@@ -443,7 +457,7 @@
                             <input type="file" id="import-json-file" class="hidden" accept=".json" onchange="importHistoryJSON(event)">
                         </label>
                     </div>
-                    <button onclick="clearEntireHistory()" class="text-rose-400 hover:text-rose-300">
+                    <button onclick="clearEntireHistory()" class="text-rose-400 hover:text-rose-300 cursor-pointer">
                         Hapus Seluruh Riwayat
                     </button>
                 </div>
@@ -467,22 +481,45 @@
     <div id="print-render-area"></div>
 
     <script>
+        // Bersihkan cache dan unregister Service Worker secara aman jika didukung dan diizinkan lingkungan iframe
+        try {
+            if ('serviceWorker' in navigator && window.isSecureContext) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        for (let registration of registrations) {
+                            registration.unregister().catch(() => {});
+                        }
+                    })
+                    .catch(() => {
+                        // Abaikan secara senyap jika environment iframe melarang akses Service Worker (InvalidStateError)
+                    });
+            }
+            if ('caches' in window) {
+                caches.keys()
+                    .then(names => {
+                        for (let name of names) caches.delete(name).catch(() => {});
+                    })
+                    .catch(() => {});
+            }
+        } catch (e) {
+            // Environment sandbox/iframe error safety
+        }
+
         // --- MASTER DATA BARANG PERCETAKAN ---
         const masterBarang = [
-            { name: "Spanduk Flexi 280gr", price: 30000, type: "280Hr", unit: "Meter (m²)", hasDim: true },
-            { name: "Spanduk Flexi 340gr (High Res)", price: 35000, type: "340Hr", unit: "Meter (m²)", hasDim: true },
-            { name: "Stiker Vinyl Glossy / Doff", price: 65000, type: "Vinyl", unit: "Meter (m²)", hasDim: true },
-            { name: "Stiker Albatros + Laminasi", price: 75000, type: "Albatros", unit: "Meter (m²)", hasDim: true },
-            { name: "Banner Backlite (Neonbox)", price: 70000, type: "Backlite", unit: "Meter (m²)", hasDim: true },
-            { name: "Brosur Art Paper 150gr (A4)", price: 2500, type: "Ap150", unit: "Lembar", hasDim: false },
-            { name: "Kartu Nama Art Carton 260gr", price: 35000, type: "Ac260", unit: "Pack", hasDim: false },
-            { name: "Cetak Bolak-Balik Ac260 BB", price: 6000, type: "Ac260BB", unit: "Lembar", hasDim: false },
-            { name: "X-Banner Stand 60x160", price: 85000, type: "Display", unit: "Set", hasDim: false },
-            { name: "Roll Up Banner 80x200", price: 220000, type: "Display", unit: "Set", hasDim: false }
+            { name: "Spanduk Flexi 280gr", price: 20000, type: "280Hr", unit: "Meter (m²)", hasDim: true },
+            { name: "Spanduk Flexi 340gr (High Res)", price: 24000, type: "340Hr", unit: "Meter (m²)", hasDim: true },
+            { name: "Stiker Vinyl Glossy / Doff", price: 40000, type: "Doff/Glossy", unit: "Meter (m²)", hasDim: true },
+            { name: "Stiker Albatros + Laminasi", price: 66000, type: "Albatros", unit: "Meter (m²)", hasDim: true },
+            { name: "Banner Backlite (Neonbox)", price: 65000, type: "Backlite", unit: "Meter (m²)", hasDim: true },
+            { name: "Brosur Art Paper 150gr (A4)", price: 4000, type: "Ap150", unit: "Lembar", hasDim: false },
+            { name: "Kartu Nama Art Carton 260gr", price: 4000, type: "Ac260", unit: "Pack", hasDim: false },
+            { name: "Cetak Bolak-Balik Ac260 BB", price: 8000, type: "Ac260BB", unit: "Lembar", hasDim: false },
+            { name: "Cetak Bolak-Balik Ap150 BB", price: 8000, type: "Ap150BB", unit: "Lembar", hasDim: false }
         ];
 
-        const STORAGE_KEY = 'vosprint_offline_invoice_history';
-        const STORE_KEY = 'vosprint_store_settings';
+        const STORAGE_KEY = 'vosprint_offline_invoice_history_v2';
+        const STORE_KEY = 'vosprint_store_settings_v2';
 
         const DEFAULT_VOSPRINT_SVG = `
             <svg viewBox="0 0 400 400" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -499,10 +536,11 @@
 
         let items = [];
         let editingIndex = -1;
-        let isDimensionMode = true; // True: Ukuran PxL cm, False: Manual / Non-Ukuran
+        let isDimensionMode = true;
 
         let storeInfo = {
             name: "VosPrint",
+            owner: "Joshua Delfianto",
             tagline: "Digital Printing & Advertising Solution",
             address: "Jl. Percetakan Raya, Jakarta",
             phone: "0812-3456-7890",
@@ -515,6 +553,7 @@
         const docNoLabel = document.getElementById('doc-no-label');
         const customerNameLabel = document.getElementById('customer-name-label');
         const dueDateContainer = document.getElementById('due-date-container');
+        const enableDueDateCheckbox = document.getElementById('enable-due-date');
         const invoiceDueDateInput = document.getElementById('invoice-due-date');
 
         const itemForm = document.getElementById('item-form');
@@ -610,32 +649,15 @@
             }).format(num);
         }
 
+        // Parsing angka murni, mencegah Rp 30.000 terpangkas jadi 30
         function cleanNumber(val) {
             if (val === undefined || val === null || val === '') return 0;
             if (typeof val === 'number') return isNaN(val) ? 0 : val;
             
-            // Konversi ke string dan buang semua simbol kecuali angka, titik, dan koma
-            let str = String(val).trim().replace(/[^0-9.,]/g, '');
-            if (!str) return 0;
-
-            // Jika ada format Rupiah Indonesia (cth: "30.000" atau "30.000,00")
-            // Titik adalah pemisah ribuan, koma adalah pemisah desimal
-            if (str.includes('.') && str.includes(',')) {
-                str = str.replace(/\./g, '').replace(',', '.');
-            } else if (str.includes('.')) {
-                // Jika hanya ada titik:
-                // Jika titik diikuti tepat 3 digit angka (seperti 30.000 atau 1.500.000), ini adalah ribuan
-                const parts = str.split('.');
-                const isThousandPattern = parts.length > 1 && parts.slice(1).every(p => p.length === 3);
-                if (isThousandPattern) {
-                    str = str.replace(/\./g, '');
-                }
-            } else if (str.includes(',')) {
-                // Jika ada koma saja, anggap desimal atau desimal IDR
-                str = str.replace(',', '.');
-            }
-
-            const parsed = parseFloat(str);
+            // Ambil semua digit angka saja
+            const digits = String(val).replace(/[^0-9]/g, '');
+            if (!digits) return 0;
+            const parsed = parseInt(digits, 10);
             return isNaN(parsed) ? 0 : parsed;
         }
 
@@ -650,12 +672,11 @@
             });
         }
 
-        // Beralih Antara Mode Ukuran (P x L cm) vs Non-Ukuran (Manual Qty)
         window.setItemMode = function(withDimension) {
             isDimensionMode = withDimension;
             if (isDimensionMode) {
-                modeDimensiBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
-                modeManualBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
+                modeDimensiBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer";
+                modeManualBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer";
                 dimPWrapper.classList.remove('hidden');
                 dimLWrapper.classList.remove('hidden');
                 itemPriceLabel.textContent = "Harga per Meter (m²) *";
@@ -663,8 +684,8 @@
                 if (!itemDimLInput.value) itemDimLInput.value = "100";
                 itemUnitInput.value = "Meter (m²)";
             } else {
-                modeManualBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition";
-                modeDimensiBtn.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition";
+                modeManualBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer";
+                modeDimensiBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer";
                 dimPWrapper.classList.add('hidden');
                 dimLWrapper.classList.add('hidden');
                 itemPriceLabel.textContent = "Harga Satuan (Rp) *";
@@ -685,24 +706,35 @@
             }
         }
 
-        function handleDocTypeChange(keepExistingNumber = false) {
+        window.handleDocTypeChange = function(keepExistingNumber = false) {
             const config = getDocTypeConfig(docTypeSelect.value);
-            docNoLabel.textContent = config.label;
-            customerNameLabel.textContent = config.billLabel + ' *';
-            customerNameInput.placeholder = config.billLabel;
-
-            if (config.showDueDate) {
-                dueDateContainer.style.display = 'block';
-            } else {
-                dueDateContainer.style.display = 'none';
-            }
+            if (docNoLabel) docNoLabel.textContent = config.label;
+            if (customerNameLabel) customerNameLabel.textContent = config.billLabel + ' *';
+            if (customerNameInput) customerNameInput.placeholder = config.billLabel;
 
             if (!keepExistingNumber) {
                 generateAutoInvoiceNo();
             }
-        }
+        };
 
-        function generateAutoInvoiceNo() {
+        window.toggleDueDateInput = function() {
+            if (enableDueDateCheckbox.checked) {
+                invoiceDueDateInput.disabled = false;
+                invoiceDueDateInput.classList.remove('bg-slate-800/50', 'text-slate-400');
+                invoiceDueDateInput.classList.add('bg-slate-800', 'text-white');
+                if (!invoiceDueDateInput.value) {
+                    const due = new Date();
+                    due.setDate(new Date().getDate() + 7);
+                    invoiceDueDateInput.value = due.toISOString().slice(0, 10);
+                }
+            } else {
+                invoiceDueDateInput.disabled = true;
+                invoiceDueDateInput.classList.add('bg-slate-800/50', 'text-slate-400');
+                invoiceDueDateInput.classList.remove('bg-slate-800', 'text-white');
+            }
+        };
+
+        window.generateAutoInvoiceNo = function() {
             const config = getDocTypeConfig(docTypeSelect ? docTypeSelect.value : 'INVOICE');
             const now = new Date();
             const y = now.getFullYear();
@@ -710,23 +742,25 @@
             const d = String(now.getDate()).padStart(2, '0');
             const rand = Math.floor(1000 + Math.random() * 9000);
             invoiceNoInput.value = `${config.prefix}-${y}${m}${d}-${rand}`;
-        }
+        };
 
         function setDefaultDate() {
             const now = new Date();
             invoiceDateInput.value = now.toISOString().slice(0, 10);
             
-            const due = new Date();
-            due.setDate(now.getDate() + 7);
-            invoiceDueDateInput.value = due.toISOString().slice(0, 10);
+            if (enableDueDateCheckbox) enableDueDateCheckbox.checked = false;
+            if (invoiceDueDateInput) {
+                invoiceDueDateInput.value = '';
+                invoiceDueDateInput.disabled = true;
+            }
         }
 
         // Pengaturan Toko
-        function toggleStoreSettings() {
+        window.toggleStoreSettings = function() {
             document.getElementById('store-settings-card').classList.toggle('hidden');
-        }
+        };
 
-        function handleCustomLogoUpload(event) {
+        window.handleCustomLogoUpload = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -735,15 +769,15 @@
                 updateLogoPreview();
             };
             reader.readAsDataURL(file);
-        }
+        };
 
-        function resetToDefaultLogo() {
+        window.resetToDefaultLogo = function() {
             storeInfo.logoUrl = "";
             const fileInput = document.getElementById('store-logo-file');
             if (fileInput) fileInput.value = "";
             updateLogoPreview();
             saveStoreSettings();
-        }
+        };
 
         function updateLogoPreview() {
             const previewContainer = document.getElementById('brand-logo-preview');
@@ -755,7 +789,7 @@
             }
         }
 
-        function copyBankAccount() {
+        window.copyBankAccount = function() {
             const bankText = storeInfo.bank || "5211483289 A.n Joshua Delfianto";
             const temp = document.createElement("input");
             temp.value = bankText;
@@ -767,7 +801,7 @@
             showCustomModal("Tersalin", `Nomor rekening "${bankText}" berhasil disalin ke clipboard.`, [
                 { text: "Oke", class: "px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs" }
             ]);
-        }
+        };
 
         function loadStoreSettings() {
             const stored = localStorage.getItem(STORE_KEY);
@@ -775,6 +809,7 @@
                 try { storeInfo = { ...storeInfo, ...JSON.parse(stored) }; } catch(e){}
             }
             document.getElementById('store-name').value = storeInfo.name || 'VosPrint';
+            document.getElementById('store-owner').value = storeInfo.owner || 'Joshua Delfianto';
             document.getElementById('store-tagline').value = storeInfo.tagline || '';
             document.getElementById('store-address').value = storeInfo.address || '';
             document.getElementById('store-phone').value = storeInfo.phone || '';
@@ -786,9 +821,10 @@
             updateLogoPreview();
         }
 
-        function saveStoreSettings() {
+        window.saveStoreSettings = function() {
             storeInfo = {
                 name: document.getElementById('store-name').value.trim() || 'VosPrint',
+                owner: document.getElementById('store-owner').value.trim() || 'Joshua Delfianto',
                 tagline: document.getElementById('store-tagline').value.trim(),
                 address: document.getElementById('store-address').value.trim(),
                 phone: document.getElementById('store-phone').value.trim(),
@@ -805,7 +841,7 @@
             showCustomModal("Tersimpan", "Profil toko berhasil disimpan.", [
                 { text: "Oke", class: "px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs" }
             ]);
-        }
+        };
 
         function populateMasterDatalist() {
             datalistTypes.innerHTML = '';
@@ -817,23 +853,19 @@
             });
         }
 
-        // --- RUMUS KALKULASI PRESISI PERCETAKAN ---
-        // Jika ada ukuran: Luas m² = (P cm × L cm) / 10000.
-        // Gross = Luas m² × Qty × Harga per Meter.
-        // Jika tanpa ukuran: Gross = Qty × Harga Satuan.
         function calculateSingleItem(item) {
-            const p = Number(item.p) || 0;
-            const l = Number(item.l) || 0;
-            const qty = Number(item.qty) || 1;
-            const price = Number(item.price) || 0;
-            const discount = Number(item.discount) || 0;
+            const p = cleanNumber(item.p);
+            const l = cleanNumber(item.l);
+            const qty = cleanNumber(item.qty) || 1;
+            const price = cleanNumber(item.price);
+            const discount = cleanNumber(item.discount);
 
             let areaM2 = 0;
             let totalVolume = qty;
             let gross = 0;
 
             if (item.hasDimension && p > 0 && l > 0) {
-                // Luas 1 pcs dalam meter persegi
+                // Konversi cm ke m2: (P cm x L cm) / 10000
                 areaM2 = (p * l) / 10000;
                 totalVolume = areaM2 * qty;
                 gross = Math.round(totalVolume * price);
@@ -848,9 +880,9 @@
         }
 
         function updateFormPreview() {
-            const p = parseFloat(itemDimPInput.value) || 0;
-            const l = parseFloat(itemDimLInput.value) || 0;
-            const qty = parseInt(itemQtyInput.value) || 1;
+            const p = cleanNumber(itemDimPInput.value);
+            const l = cleanNumber(itemDimLInput.value);
+            const qty = cleanNumber(itemQtyInput.value) || 1;
             const price = cleanNumber(itemPriceInput.value);
             const discount = cleanNumber(itemDiscountInput.value);
 
@@ -858,20 +890,22 @@
             let gross = 0;
 
             if (isDimensionMode && p > 0 && l > 0) {
-                const areaM2 = (p * l) / 10000; // Contoh: 100x100 = 1 m2
+                const areaM2 = (p * l) / 10000;
                 const totalM2 = areaM2 * qty;
                 gross = Math.round(totalM2 * price);
                 previewText = `(${p}×${l} cm = ${areaM2.toFixed(2)} m² × ${qty} pcs = ${totalM2.toFixed(2)} m² × ${formatRupiah(price)})`;
             } else {
                 gross = Math.round(qty * price);
-                previewText = `(${qty} ${itemUnitInput.value} × ${formatRupiah(price)})`;
+                previewText = `(${qty} ${itemUnitInput.value || 'Pcs'} × ${formatRupiah(price)})`;
             }
 
             const totalDisc = discount * qty;
             const subtotal = Math.max(0, gross - totalDisc);
 
-            document.getElementById('preview-val').textContent = formatRupiah(subtotal);
-            document.getElementById('dimension-summary').textContent = previewText;
+            const previewElem = document.getElementById('preview-val');
+            const summaryElem = document.getElementById('dimension-summary');
+            if (previewElem) previewElem.textContent = formatRupiah(subtotal);
+            if (summaryElem) summaryElem.textContent = previewText;
         }
 
         itemTypeInput.addEventListener('input', function() {
@@ -879,7 +913,7 @@
             const matched = masterBarang.find(b => b.type.toLowerCase() === selected);
             if (matched) {
                 if (!itemNameInput.value) itemNameInput.value = matched.name;
-                if (!cleanNumber(itemPriceInput.value)) itemPriceInput.value = formatRupiah(matched.price);
+                itemPriceInput.value = formatRupiah(matched.price);
                 if (matched.unit) itemUnitInput.value = matched.unit;
                 setItemMode(Boolean(matched.hasDim));
             }
@@ -907,7 +941,7 @@
         });
 
         [itemDimPInput, itemDimLInput, itemQtyInput, itemUnitInput].forEach(elem => {
-            elem.addEventListener('input', updateFormPreview);
+            if (elem) elem.addEventListener('input', updateFormPreview);
         });
 
         itemForm.addEventListener('submit', function(e) {
@@ -917,10 +951,10 @@
             const type = itemTypeInput.value.trim();
             const unit = itemUnitInput.value;
             const price = cleanNumber(itemPriceInput.value);
-            const qty = parseInt(itemQtyInput.value) || 1;
+            const qty = cleanNumber(itemQtyInput.value) || 1;
             const hasDimension = isDimensionMode;
-            const p = hasDimension ? (parseFloat(itemDimPInput.value) || 0) : 0;
-            const l = hasDimension ? (parseFloat(itemDimLInput.value) || 0) : 0;
+            const p = hasDimension ? cleanNumber(itemDimPInput.value) : 0;
+            const l = hasDimension ? cleanNumber(itemDimLInput.value) : 0;
             const discount = cleanNumber(itemDiscountInput.value);
             const notes = itemNotesInput.value.trim();
 
@@ -953,7 +987,7 @@
             resetItemForm();
         });
 
-        function resetItemForm() {
+        window.resetItemForm = function() {
             editingIndex = -1;
             itemNameInput.value = '';
             itemTypeInput.value = '';
@@ -968,7 +1002,7 @@
             submitBtnText.textContent = "+ Tambahkan ke Nota";
             updateFormPreview();
             itemNameInput.focus();
-        }
+        };
 
         function renderItems() {
             Array.from(itemsContainer.children).forEach(child => {
@@ -990,9 +1024,7 @@
                     row.className = 'hover:bg-slate-800/50 transition duration-150 border-b border-slate-800/80';
 
                     const dimLabel = item.hasDimension ? `${item.p}×${item.l} cm` : '-';
-                    const qtyDetail = item.hasDimension 
-                        ? `${calc.totalVolume.toFixed(2)} m² (${item.qty} pcs)` 
-                        : `${item.qty} ${item.unit}`;
+                    const qtyDetail = `${item.qty} ${item.hasDimension ? 'Pcs' : (item.unit || 'Pcs')}`;
                     const discountLabel = calc.totalDiscount > 0 ? `-${formatRupiah(calc.totalDiscount)}` : '-';
 
                     row.innerHTML = `
@@ -1006,17 +1038,17 @@
                         </td>
                         <td class="px-3 py-3 text-center text-xs text-amber-300 font-mono">${dimLabel}</td>
                         <td class="px-3 py-3 text-right text-xs text-slate-300">${formatRupiah(item.price)}</td>
-                        <td class="px-3 py-3 text-center text-xs text-slate-200 font-medium">${qtyDetail}</td>
+                        <td class="px-3 py-3 text-center text-xs text-slate-200 font-semibold">${qtyDetail}</td>
                         <td class="px-3 py-3 text-right text-xs text-amber-400">${discountLabel}</td>
                         <td class="px-3 py-3 text-right text-sm font-bold text-emerald-400">${formatRupiah(calc.subtotal)}</td>
                         <td class="px-3 py-3 text-center">
                             <div class="flex items-center justify-center space-x-1">
                                 <button type="button" onclick="editItem(${index})" title="Edit Item" 
-                                        class="p-1 text-indigo-400 hover:text-white rounded transition">
+                                        class="p-1 text-indigo-400 hover:text-white rounded transition cursor-pointer">
                                     ✏️
                                 </button>
                                 <button type="button" onclick="deleteItemPrompt(${index})" title="Hapus Item"
-                                        class="p-1 text-rose-400 hover:text-white rounded transition">
+                                        class="p-1 text-rose-400 hover:text-white rounded transition cursor-pointer">
                                     🗑️
                                 </button>
                             </div>
@@ -1055,10 +1087,10 @@
         window.deleteItemPrompt = function(index) {
             const it = items[index];
             showCustomModal("Hapus Item", `Hapus "${it.name}" dari nota ini?`, [
-                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs cursor-pointer" },
                 { 
                     text: "Hapus", 
-                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold cursor-pointer",
                     action: () => {
                         items.splice(index, 1);
                         if (editingIndex === index) resetItemForm();
@@ -1071,10 +1103,10 @@
         window.clearAllItems = function() {
             if (items.length === 0) return;
             showCustomModal("Bersihkan Nota", "Seluruh item pada nota ini akan dihapus. Lanjutkan?", [
-                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs cursor-pointer" },
                 { 
                     text: "Bersihkan", 
-                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold cursor-pointer",
                     action: () => {
                         items = [];
                         resetItemForm();
@@ -1084,7 +1116,7 @@
             ]);
         };
 
-        function calculateFinancials() {
+        window.calculateFinancials = function() {
             let grossTotal = 0;
             let itemDiscountsTotal = 0;
 
@@ -1115,22 +1147,22 @@
             printImageButton.disabled = !hasItems;
 
             return { grossTotal, itemDiscountsTotal, netSubtotal, globalDiscount, taxRate, taxAmount, grandTotal };
-        }
+        };
 
-        function createNewInvoicePrompt() {
+        window.createNewInvoicePrompt = function() {
             if (items.length > 0) {
                 showCustomModal("Buat Lembar Baru", "Buka lembar baru? Item aktif saat ini akan dikosongkan.", [
-                    { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                    { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs cursor-pointer" },
                     { 
                         text: "Buat Baru", 
-                        class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold",
+                        class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer",
                         action: () => initFreshInvoice()
                     }
                 ]);
             } else {
                 initFreshInvoice();
             }
-        }
+        };
 
         function initFreshInvoice() {
             items = [];
@@ -1145,7 +1177,7 @@
             renderItems();
         }
 
-        function saveInvoice() {
+        window.saveInvoice = function() {
             if (items.length === 0) return;
             const fin = calculateFinancials();
             const invoiceData = {
@@ -1153,7 +1185,7 @@
                 docType: docTypeSelect.value || 'INVOICE',
                 invoiceNo: invoiceNoInput.value.trim() || `INV-${Date.now()}`,
                 invoiceDate: invoiceDateInput.value || new Date().toISOString().slice(0, 10),
-                dueDate: invoiceDueDateInput.value || '',
+                dueDate: (enableDueDateCheckbox.checked && invoiceDueDateInput.value) ? invoiceDueDateInput.value : '',
                 customerName: customerNameInput.value.trim() || 'Pelanggan Umum',
                 customerPhone: customerPhoneInput.value.trim() || '-',
                 items: JSON.parse(JSON.stringify(items)),
@@ -1171,14 +1203,14 @@
 
                 const docConfig = getDocTypeConfig(invoiceData.docType);
                 showCustomModal("Tersimpan", `${docConfig.title} ${invoiceData.invoiceNo} berhasil disimpan ke riwayat lokal.`, [
-                    { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold" }
+                    { text: "Oke", class: "px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold cursor-pointer" }
                 ]);
             } catch(e) {
                 showCustomModal("Gagal", "Gagal menyimpan riwayat ke penyimpanan browser.", [
-                    { text: "Tutup", class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs" }
+                    { text: "Tutup", class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs cursor-pointer" }
                 ]);
             }
-        }
+        };
 
         function loadHistory() {
             invoicesList.innerHTML = '';
@@ -1215,11 +1247,11 @@
                         <span class="text-slate-400">${inv.items.length} item barang</span>
                         <div class="flex gap-2">
                             <button type="button" onclick="loadHistoryToActive('${inv.id}')" 
-                                    class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-semibold text-[11px]">
+                                    class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-semibold text-[11px] cursor-pointer">
                                 Muat
                             </button>
                             <button type="button" onclick="deleteHistoryItem('${inv.id}')" 
-                                    class="px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded font-semibold text-[11px]">
+                                    class="px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded font-semibold text-[11px] cursor-pointer">
                                 Hapus
                             </button>
                         </div>
@@ -1240,7 +1272,21 @@
 
             invoiceNoInput.value = found.invoiceNo;
             invoiceDateInput.value = found.invoiceDate || new Date().toISOString().slice(0, 10);
-            if (found.dueDate) invoiceDueDateInput.value = found.dueDate;
+            
+            if (found.dueDate) {
+                enableDueDateCheckbox.checked = true;
+                invoiceDueDateInput.disabled = false;
+                invoiceDueDateInput.classList.remove('bg-slate-800/50', 'text-slate-400');
+                invoiceDueDateInput.classList.add('bg-slate-800', 'text-white');
+                invoiceDueDateInput.value = found.dueDate;
+            } else {
+                enableDueDateCheckbox.checked = false;
+                invoiceDueDateInput.disabled = true;
+                invoiceDueDateInput.classList.add('bg-slate-800/50', 'text-slate-400');
+                invoiceDueDateInput.classList.remove('bg-slate-800', 'text-white');
+                invoiceDueDateInput.value = '';
+            }
+
             customerNameInput.value = found.customerName || '';
             customerPhoneInput.value = found.customerPhone || '';
             items = JSON.parse(JSON.stringify(found.items));
@@ -1261,10 +1307,10 @@
 
         window.clearEntireHistory = function() {
             showCustomModal("Hapus Semua Riwayat", "Semua riwayat transaksi akan dihapus. Lanjutkan?", [
-                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs" },
+                { text: "Batal", class: "px-3 py-1.5 border border-slate-700 text-slate-300 rounded-lg text-xs cursor-pointer" },
                 { 
                     text: "Hapus Semua", 
-                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold",
+                    class: "px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold cursor-pointer",
                     action: () => {
                         localStorage.removeItem(STORAGE_KEY);
                         loadHistory();
@@ -1273,7 +1319,7 @@
             ]);
         };
 
-        function exportHistoryJSON() {
+        window.exportHistoryJSON = function() {
             const data = localStorage.getItem(STORAGE_KEY) || '[]';
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1284,9 +1330,9 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-        }
+        };
 
-        function importHistoryJSON(event) {
+        window.importHistoryJSON = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1304,7 +1350,7 @@
                 event.target.value = '';
             };
             reader.readAsText(file);
-        }
+        };
 
         historyHeader.addEventListener('click', () => {
             const isHidden = historyContent.classList.contains('hidden');
@@ -1317,16 +1363,17 @@
             }
         });
 
-        // Template Dokumen Cetak / Ekspor PNG
         function buildPrintTemplate() {
             const fin = calculateFinancials();
             const config = getDocTypeConfig(docTypeSelect.value);
             const invNo = invoiceNoInput.value.trim() || `${config.prefix}-DRAFT`;
             const invDate = formatDateIndonesia(invoiceDateInput.value);
-            const dueDate = invoiceDueDateInput.value ? formatDateIndonesia(invoiceDueDateInput.value) : '';
+            const hasDueDate = enableDueDateCheckbox && enableDueDateCheckbox.checked && invoiceDueDateInput.value;
+            const dueDate = hasDueDate ? formatDateIndonesia(invoiceDueDateInput.value) : '';
             const custName = customerNameInput.value.trim() || 'Pelanggan Umum';
             const custPhone = customerPhoneInput.value.trim() || '-';
             const bankAccount = storeInfo.bank || '5211483289 A.n Joshua Delfianto';
+            const signerName = storeInfo.owner || 'Joshua Delfianto';
 
             let logoMarkup = '';
             if (storeInfo.logoUrl) {
@@ -1351,9 +1398,7 @@
             items.forEach((it, idx) => {
                 const c = calculateSingleItem(it);
                 const dim = it.hasDimension ? `${it.p}×${it.l} cm` : '-';
-                const qtyStr = it.hasDimension 
-                    ? `${c.totalVolume.toFixed(2)} m² (${it.qty} pcs)` 
-                    : `${it.qty} ${it.unit}`;
+                const qtyStr = `${it.qty} ${it.hasDimension ? 'Pcs' : (it.unit || 'Pcs')}`;
                 const discStr = c.totalDiscount > 0 ? `<span style="color:#d97706;">-${formatRupiah(c.totalDiscount)}</span>` : '-';
 
                 itemsRows += `
@@ -1366,7 +1411,7 @@
                         <td style="padding: 9px 6px; font-size: 11px; color: #64748b;">${it.type || '-'}</td>
                         <td style="padding: 9px 6px; text-align: center; font-size: 11px; font-family: monospace; color: #475569;">${dim}</td>
                         <td style="padding: 9px 6px; text-align: right; font-size: 11px; color: #334155;">${formatRupiah(it.price)}</td>
-                        <td style="padding: 9px 6px; text-align: center; font-size: 11px; font-weight: 500; color: #0f172a;">${qtyStr}</td>
+                        <td style="padding: 9px 6px; text-align: center; font-size: 11px; font-weight: 600; color: #0f172a;">${qtyStr}</td>
                         <td style="padding: 9px 6px; text-align: right; font-size: 11px;">${discStr}</td>
                         <td style="padding: 9px 6px; text-align: right; font-size: 12px; font-weight: 700; color: #047857;">${formatRupiah(c.subtotal)}</td>
                     </tr>
@@ -1404,7 +1449,7 @@
                                 <span style="font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 600;">Tanggal Terbit:</span>
                                 <div style="font-size: 12px; font-weight: 600; color: #0f172a;">${invDate}</div>
                             </div>
-                            ${config.showDueDate && dueDate ? `
+                            ${hasDueDate && dueDate ? `
                                 <div>
                                     <span style="font-size: 10px; text-transform: uppercase; color: #b45309; font-weight: 700;">Jatuh Tempo:</span>
                                     <div style="font-size: 12px; font-weight: 700; color: #b45309;">${dueDate}</div>
@@ -1418,11 +1463,11 @@
                         <thead>
                             <tr style="background-color: #0f172a; color: #ffffff; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
                                 <th style="padding: 8px 6px; text-align: center; width: 5%;">No</th>
-                                <th style="padding: 8px 6px; width: 32%;">Barang</th>
+                                <th style="padding: 8px 6px; width: 34%;">Barang</th>
                                 <th style="padding: 8px 6px; width: 12%;">Jenis</th>
                                 <th style="padding: 8px 6px; text-align: center; width: 14%;">Ukuran (P×L)</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 13%;">Harga</th>
-                                <th style="padding: 8px 6px; text-align: center; width: 12%;">Hitungan Qty</th>
+                                <th style="padding: 8px 6px; text-align: center; width: 10%;">Qty</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 6%;">Diskon</th>
                                 <th style="padding: 8px 6px; text-align: right; width: 14%;">Subtotal</th>
                             </tr>
@@ -1450,7 +1495,7 @@
                                 <div>
                                     <div style="margin-bottom: 44px;">Hormat Kami,</div>
                                     <div style="border-bottom: 1px solid #94a3b8; width: 130px; margin: 0 auto;"></div>
-                                    <div style="margin-top: 3px;">( ${storeInfo.name} )</div>
+                                    <div style="margin-top: 3px;">( ${signerName} )</div>
                                 </div>
                             </div>
                         </div>
@@ -1553,14 +1598,6 @@
             setTimeout(() => { renderArea.innerHTML = ''; }, 1000);
         };
 
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
-                });
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             loadStoreSettings();
             handleDocTypeChange();
@@ -1569,7 +1606,6 @@
             setItemMode(true);
             renderItems();
             loadHistory();
-            registerServiceWorker();
         });
     </script>
 </body>
